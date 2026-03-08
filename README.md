@@ -19,6 +19,14 @@ A lightweight, multi-calendar Angular date picker supporting **Gregorian**, **Sh
 
 ---
 
+## Live Demo
+
+**[http://calendar.molayemi.com](http://calendar.molayemi.com)**
+
+Interactive examples with all calendar types, time picker, date restrictions and calendar switcher.
+
+---
+
 ## Requirements
 
 | Peer dependency | Minimum |
