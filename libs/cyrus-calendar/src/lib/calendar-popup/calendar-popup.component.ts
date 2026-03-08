@@ -165,29 +165,6 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
     }
   }
 
-  private convertDateValue(value: string, from: DatePickerType, to: DatePickerType): string {
-    if (!value || from === to) return value;
-
-    try {
-      const baseDate = this.toGregorianDate(value, from);
-      if (!baseDate) return value;
-
-      const fmt = this.fullValueFormat();
-      if (to === DatePickerType.Gregorian) return DateTime.format(baseDate, fmt);
-      if (to === DatePickerType.Shamsi) return DateTime.format(DateTime.toJDate(baseDate), fmt);
-      return DateTime.format(DateTime.toADate(baseDate), fmt);
-    } catch {
-      return value;
-    }
-  }
-
-  private toGregorianDate(value: string, type: DatePickerType): Date | null {
-    const fmt = this.fullValueFormat();
-    if (type === DatePickerType.Gregorian) return DateTime.parseDate(value, fmt);
-    if (type === DatePickerType.Shamsi) return DateTime.parseJDate(value, fmt).toDate();
-    return DateTime.convertADateToJDate(value, fmt).toDate();
-  }
-
   private syncFromInputs(options: DatePickerOptions): void {
     options.type = this.effectiveCalendarType() || this.config.defaultCalendarType();
 
