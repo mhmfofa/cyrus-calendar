@@ -119,21 +119,20 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
       const savedS = this.item.getSecond() >= 0 ? this.item.getSecond() : 0;
 
       // 1. Convert the DATE PART of this.item to a Gregorian JS Date
-      //    (use dateOnly format so toDate() has nothing to lose)
+      //    Use noon (12:00 local) so toISOString() never rolls back to the
+      //    previous UTC day for timezones east of UTC (e.g. Iran UTC+3:30).
       const dateOnlyFmt = this.valueFormat();
       let gregorianDate: Date;
       if (previousType === DatePickerType.Gregorian) {
         gregorianDate = new Date(
-          this.item.getYear(), this.item.getMonth() - 1, this.item.getDay()
+          this.item.getYear(), this.item.getMonth() - 1, this.item.getDay(), 12, 0, 0
         );
       } else if (previousType === DatePickerType.Shamsi) {
-        gregorianDate = DateTime.parseJDate(
-          this.item.format(dateOnlyFmt), dateOnlyFmt
-        ).toDate();
+        const raw = DateTime.parseJDate(this.item.format(dateOnlyFmt), dateOnlyFmt).toDate();
+        gregorianDate = new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
       } else {
-        gregorianDate = DateTime.convertADateToJDate(
-          this.item.format(dateOnlyFmt), dateOnlyFmt
-        ).toDate();
+        const raw = DateTime.convertADateToJDate(this.item.format(dateOnlyFmt), dateOnlyFmt).toDate();
+        gregorianDate = new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
       }
 
       // 2. Re-format the date part into the new calendar type
