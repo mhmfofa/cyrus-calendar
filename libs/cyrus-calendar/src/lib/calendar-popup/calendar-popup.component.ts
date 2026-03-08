@@ -106,55 +106,23 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
     this.lastCalendarType = nextType;
 
     if (!previousType || previousType === nextType) return;
-
-    // Work directly from this.item — avoids reading inputElement.value which
-    // may hold either the machine format (from Angular's form binding) or the
-    // display format (from our queueMicrotask), making it non-deterministic.
     if (!this.item || this.item.getYear() < 1) return;
 
     try {
-      // Preserve time fields — toDate() / toJDate() conversions drop the time component
       const savedH = this.item.getHour()   >= 0 ? this.item.getHour()   : 0;
       const savedM = this.item.getMinute() >= 0 ? this.item.getMinute() : 0;
       const savedS = this.item.getSecond() >= 0 ? this.item.getSecond() : 0;
 
-      // 1. Convert the DATE PART of this.item to a Gregorian JS Date
-      //    Use noon (12:00 local) so toISOString() never rolls back to the
-      //    previous UTC day for timezones east of UTC (e.g. Iran UTC+3:30).
-      const dateOnlyFmt = this.valueFormat();
-      let gregorianDate: Date;
-      if (previousType === DatePickerType.Gregorian) {
-        gregorianDate = new Date(
-          this.item.getYear(), this.item.getMonth() - 1, this.item.getDay(), 12, 0, 0
-        );
-      } else if (previousType === DatePickerType.Shamsi) {
-        const raw = DateTime.parseJDate(this.item.format(dateOnlyFmt), dateOnlyFmt).toDate();
-        gregorianDate = new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
-      } else {
-        const raw = DateTime.convertADateToJDate(this.item.format(dateOnlyFmt), dateOnlyFmt).toDate();
-        gregorianDate = new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
-      }
+      // Convert this.item from the previous calendar to a Gregorian JS Date,
+      // then re-express it in the new calendar type for display.
+      const gDate = this.itemToGregorianDate(this.item, previousType);
+      this.item = this.gregorianDateToItem(gDate, nextType);
+      this.item.setHour(savedH).setMinute(savedM).setSecond(savedS);
 
-      // 2. Re-format the date part into the new calendar type
-      let newDateValue: string;
-      if (nextType === DatePickerType.Gregorian) {
-        newDateValue = DateTime.format(gregorianDate, dateOnlyFmt);
-      } else if (nextType === DatePickerType.Shamsi) {
-        newDateValue = DateTime.format(DateTime.toJDate(gregorianDate), dateOnlyFmt);
-      } else {
-        newDateValue = DateTime.format(DateTime.toADate(gregorianDate), dateOnlyFmt);
-      }
+      // Emit the Gregorian value (underlying date is unchanged).
+      const gregorianValue = this.itemToGregorianValue(this.item);
+      this.onchange(gregorianValue);
 
-      // 3. Reattach the preserved time to build the complete machine value
-      const pad = (n: number) => n < 10 ? '0' + n : '' + n;
-      const newMachineValue = this.time()
-        ? `${newDateValue}T${pad(savedH)}:${pad(savedM)}:${pad(savedS)}`
-        : newDateValue;
-
-      // 3. Update internal state and both outputs
-      this.writeValue(newMachineValue);
-
-      this.onchange(newMachineValue);
       const inputElement = this.inputElement();
       if (inputElement) {
         const display = this.item.format(this.fullDisplayFormat());
@@ -163,6 +131,81 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
     } catch {
       // conversion failed — leave value as-is
     }
+  }
+
+  /**
+   * Converts a DateTime (in the given calendar type) to a noon Gregorian JS Date.
+   * Using noon avoids UTC day-shift for timezones east of UTC (e.g. Iran UTC+3:30).
+   */
+  private itemToGregorianDate(item: DateTime, calType: DatePickerType): Date {
+    const fmt = this.valueFormat();
+    if (calType === DatePickerType.Gregorian) {
+      return new Date(item.getYear(), item.getMonth() - 1, item.getDay(), 12, 0, 0);
+    } else if (calType === DatePickerType.Shamsi) {
+      const raw = DateTime.parseJDate(item.format(fmt), fmt).toDate();
+      return new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
+    } else {
+      const raw = DateTime.convertADateToJDate(item.format(fmt), fmt).toDate();
+      return new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
+    }
+  }
+
+  /** Converts a Gregorian JS Date to a DateTime in the specified calendar type. */
+  private gregorianDateToItem(gDate: Date, calType: DatePickerType): DateTime {
+    if (calType === DatePickerType.Gregorian) return DateTime.toDateTime(gDate);
+    if (calType === DatePickerType.Shamsi)   return DateTime.toJDate(gDate);
+    return DateTime.toADate(gDate);
+  }
+
+  /**
+   * Converts this.item (calendar-specific) to a Gregorian value string.
+   * This is what gets emitted to ngModel / formControl — always Gregorian.
+   */
+  private itemToGregorianValue(item: DateTime): string {
+    const gDate = this.itemToGregorianDate(item, this.effectiveCalendarType());
+    const dateValue = DateTime.format(gDate, this.valueFormat());
+    if (this.time()) {
+      const pad = (n: number) => n < 10 ? '0' + n : '' + n;
+      return `${dateValue}T${pad(item.getHour())}:${pad(item.getMinute())}:${pad(item.getSecond())}`;
+    }
+    return dateValue;
+  }
+
+  /**
+   * Parses an incoming Gregorian value string and returns a DateTime
+   * expressed in the current effective calendar type (for display).
+   */
+  private gregorianValueToItem(gregorianValue: string): DateTime {
+    const normalized = (gregorianValue || '').replace(' - ', 'T');
+    const calType    = this.effectiveCalendarType();
+    const today      = this.activeOptions.globalization.today();
+
+    const hasExplicitTime = this.time() && normalized.includes('T');
+    const datePart   = normalized.includes('T') ? normalized.split('T')[0] : normalized;
+    const timePart   = hasExplicitTime ? normalized.split('T')[1] : null;
+
+    // Parse the Gregorian date part
+    let item: DateTime;
+    const gDateRaw  = datePart ? DateTime.parseDate(datePart, this.valueFormat()) : null;
+    const validYear = gDateRaw ? gDateRaw.getFullYear() : 0;
+    if (gDateRaw && validYear > 100) {
+      const gDate = new Date(gDateRaw.getFullYear(), gDateRaw.getMonth(), gDateRaw.getDate(), 12, 0, 0);
+      item = this.gregorianDateToItem(gDate, calType);
+    } else {
+      // Empty / invalid — default to today in the current calendar
+      item = today.clone();
+    }
+
+    // Apply time
+    if (timePart) {
+      const timeItem = DateTime.parse(timePart, this.timeFormat());
+      if (timeItem.getHour()   >= 0) item.setHour(timeItem.getHour());
+      if (timeItem.getMinute() >= 0) item.setMinute(timeItem.getMinute());
+      if (timeItem.getSecond() >= 0) item.setSecond(timeItem.getSecond());
+    } else if (this.time()) {
+      item.setHour(today.getHour()).setMinute(today.getMinute()).setSecond(today.getSecond());
+    }
+    return item;
   }
 
   private syncFromInputs(options: DatePickerOptions): void {
@@ -207,29 +250,20 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
       } else {
         this.open();
       }
-      this.writeValue(this.allowMultiple ? inputElement.value.split(',') : inputElement.value);
+      // Do not re-parse inputElement.value here — it holds the display format,
+      // not a Gregorian value. this.item is already authoritative.
     });
   }
 
   writeValue(value: string | string[]): void {
+    // Incoming value is ALWAYS Gregorian (yyyy-MM-dd or yyyy-MM-ddThh:mm:ss).
+    // Convert it to the current calendar type so this.item is ready for display.
     if (this.allowMultiple || this.allowRange) this.items = [];
     if (Array.isArray(value)) {
       this.allowMultiple = true;
-      this.items = [];
-      for (let i = 0, length = value.length; i < length; i++) {
-        this.items.push(DateTime.parse(value[i].replace(' - ', 'T'), this.fullValueFormat()));
-      }
+      this.items = value.map(v => this.gregorianValueToItem(v));
     } else {
-      const normalized = (value || '').replace(' - ', 'T');
-      this.item = DateTime.parse(normalized, this.fullValueFormat());
-      const today = this.activeOptions.globalization.today();
-      const hasExplicitTime = this.time() && normalized.includes('T');
-      if (this.item.getSecond() < 0 || (!hasExplicitTime && this.time())) this.item.setSecond(today.getSecond());
-      if (this.item.getMinute() < 0 || (!hasExplicitTime && this.time())) this.item.setMinute(today.getMinute());
-      if (this.item.getHour() < 0   || (!hasExplicitTime && this.time())) this.item.setHour(today.getHour());
-      if (this.item.getDay() < 1)   this.item.setDay(today.getDay());
-      if (this.item.getMonth() < 1) this.item.setMonth(today.getMonth());
-      if (this.item.getYear() < 1)  this.item.setYear(today.getYear());
+      this.item = this.gregorianValueToItem(value as string);
     }
   }
 
@@ -240,11 +274,11 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
   open() {
     this.syncFromInputs(this.activeOptions);
     if (this.show()) return; // already open — keep current item state
-    const inputElement = this.inputElement();
-    if (inputElement) {
-      // Normalize display format (" - ") back to machine format ("T") before parsing
-      const rawValue = inputElement.value.replace(' - ', 'T');
-      this.writeValue(this.allowMultiple ? rawValue.split(',') : rawValue);
+    // this.item is kept in sync by writeValue() which always receives Gregorian values.
+    // Do NOT re-read from inputElement.value — it holds the calendar-specific display
+    // string, not a Gregorian value, so writeValue() would misparse it.
+    if (!this.item || this.item.getYear() < 1) {
+      this.item = this.activeOptions.globalization.today().clone();
     }
     this.show.set(true);
   }
@@ -265,12 +299,12 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
   }
 
   setValue() {
-    // Emit machine value (value-format with hyphens, T separator for time)
+    // Emit Gregorian value regardless of the displayed calendar type.
     let machineValue: string | string[];
     if (this.items && (this.allowMultiple || this.allowRange)) {
-      machineValue = this.items.map(i => i.format(this.fullValueFormat()));
+      machineValue = this.items.map(i => this.itemToGregorianValue(i));
     } else {
-      machineValue = this.item.format(this.fullValueFormat());
+      machineValue = this.itemToGregorianValue(this.item);
     }
     this.onchange(machineValue);
 
