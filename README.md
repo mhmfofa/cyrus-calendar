@@ -159,7 +159,7 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 | `[directive]` | `CyrusCalendarDirective` | `null` | Directive reference — inherits `calendar-type`, `disable-weekends`, `disable-past-days` |
 | `[calendar-type]` | `DatePickerType` | `'shamsi'` | Calendar system (ignored when `[directive]` provided) |
 | `[format]` | `string` | `'yyyy/MM/dd'` | Display format shown in the input (slashes) |
-| `[value-format]` | `string` | `'yyyy-MM-dd'` | Format of the value emitted to `ngModel` / `formControl` (hyphens) |
+| `[value-format]` | `string` | `'yyyy-MM-dd'` | Structure of the emitted Gregorian date string (e.g. `yyyy-MM-dd`). Only affects separator/order — the date is **always Gregorian** regardless of the displayed calendar. |
 | `[time]` | `boolean` | `false` | Show time picker panel |
 | `[time-format]` | `string` | `'hh:mm:ss'` | Format for the time part (only when `[time]="true"`) |
 | `[date]` | `boolean` | `true` | Show date picker panel |
@@ -171,6 +171,8 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 | `[multiple]` | `boolean` | `false` | Multi-date selection |
 | `[range]` | `boolean` | `false` | Date-range selection |
 | `[options]` | `DatePickerOptions` | — | Advanced configuration object |
+
+> ⚠️ **The emitted value is always in the Gregorian calendar**, regardless of the calendar type displayed to the user. A Shamsi date `1404/12/17` and an Imperial date `2584/12/17` both emit `2026-03-08`. This makes the value safe to send directly to REST APIs and databases without any conversion on your side.
 
 ---
 

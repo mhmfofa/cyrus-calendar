@@ -56,7 +56,6 @@
             <li class="nav-item"><a class="nav-link" href="#ex-gregorian">Gregorian Calendar</a></li>
             <li class="nav-item"><a class="nav-link" href="#ex-restrictions">Date Restrictions</a></li>
             <li class="nav-item"><a class="nav-link" href="#ex-calendar-switch">Calendar Switcher</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ex-publish">Publishing to npm</a></li>
           </ul>
         </div>
       </div>
@@ -224,7 +223,11 @@ configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
                   <td><code>[value-format]</code></td>
                   <td><code>string</code></td>
                   <td><code>'yyyy-MM-dd'</code></td>
-                  <td>Format of the value emitted to <code>ngModel</code> / <code>formControl</code>. Uses hyphens — e.g. <code>1403-06-15</code>. ISO-style, suitable for storage or API calls.</td>
+                  <td>
+                    Structure of the emitted Gregorian date string — e.g. <code>2026-03-08</code>.
+                    Only affects separators / field order. The emitted date is
+                    <strong>always Gregorian</strong> regardless of the displayed calendar type.
+                  </td>
                 </tr>
                 <tr>
                   <td><code>[min]</code></td>
@@ -294,6 +297,16 @@ configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="alert alert-info mt-3">
+            <strong>&#128204; Value is always Gregorian.</strong>
+            The value emitted to <code>ngModel</code> / <code>formControl</code> is
+            <strong>always in the Gregorian calendar</strong>, regardless of which calendar
+            type is displayed to the user. For example, selecting <em>1404/12/17</em> in
+            Shamsi or <em>2584/12/17</em> in Imperial both emit <code>2026-03-08</code>.
+            This means you can send the value directly to REST APIs or databases without
+            any extra conversion on your side.
           </div>
 
           <h5 class="fw-semibold mt-4">Methods</h5>
