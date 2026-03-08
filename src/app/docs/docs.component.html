@@ -604,52 +604,6 @@ calendarType = signal&lt;DatePickerType&gt;(DatePickerType.Imperial);
 /&gt;</code></pre>
         </section>
 
-        <!-- ─── Publishing to npm ─── -->
-        <section id="ex-publish" class="mb-5">
-          <h2 class="section-title border-top pt-4">Publishing to npm</h2>
-          <p>The project uses <a href="https://github.com/ng-packagr/ng-packagr" target="_blank">ng-packagr</a> to build a proper Angular Package Format (APF) distributable.</p>
-
-          <h5 class="fw-semibold mt-4">1. Build the library</h5>
-          <pre class="code-block"><code>npm run build:lib</code></pre>
-          <p class="text-muted">Output will be placed in <code>dist/cyrus-calendar/</code>. The folder includes compiled ESM + CJS bundles, type declarations, and the bundled IRANSans fonts.</p>
-
-          <h5 class="fw-semibold mt-4">2. Log in to npm</h5>
-          <pre class="code-block"><code>npm login</code></pre>
-          <p class="text-muted">Requires an account at <a href="https://www.npmjs.com/" target="_blank">npmjs.com</a>. Your username, password, and a one-time code from your email or authenticator app will be requested.</p>
-
-          <h5 class="fw-semibold mt-4">3. Publish the built package</h5>
-          <pre class="code-block"><code>cd dist/cyrus-calendar
-npm publish --access public</code></pre>
-          <div class="alert alert-info">
-            <strong>Important:</strong> Always publish from <code>dist/cyrus-calendar</code>, not from the root workspace folder. The <code>dist</code> folder contains the compiled library only — no dev dependencies or source files.
-          </div>
-
-          <h5 class="fw-semibold mt-4">4. Bump the version before each release</h5>
-          <p>Update the <code>version</code> field in <code>libs/cyrus-calendar/package.json</code> before rebuilding and republishing:</p>
-          <pre class="code-block"><code># patch: 1.0.0 → 1.0.1
-npm version patch --prefix libs/cyrus-calendar
-
-# minor: 1.0.0 → 1.1.0
-npm version minor --prefix libs/cyrus-calendar
-
-# major: 1.0.0 → 2.0.0
-npm version major --prefix libs/cyrus-calendar
-
-# then rebuild
-npm run build:lib
-cd dist/cyrus-calendar &amp;&amp; npm publish --access public</code></pre>
-
-          <h5 class="fw-semibold mt-4">5. (Optional) Publish a beta / pre-release</h5>
-          <pre class="code-block"><code># in libs/cyrus-calendar/package.json set: "version": "1.1.0-beta.1"
-npm publish --access public --tag beta
-
-# install beta in a consumer project
-npm install ng-cyrus-calendar@beta</code></pre>
-
-          <h5 class="fw-semibold mt-4">6. Verify the published package</h5>
-          <pre class="code-block"><code>npm info ng-cyrus-calendar</code></pre>
-        </section>
-
       </div><!-- /col-lg-9 -->
     </div><!-- /row -->
   </div><!-- /container -->
