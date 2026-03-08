@@ -14,16 +14,16 @@
     "hijri",
     "rtl"
   ],
-  "author": "mhm",
+  "author": "Mohammadhassan Molayemi",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mhm/ng-cyrus-calendar.git"
+    "url": "https://github.com/mhmfofa/cyrus-calendar.git"
   },
   "bugs": {
-    "url": "https://github.com/mhm/ng-cyrus-calendar/issues"
+    "url": "https://github.com/mhmfofa/cyrus-calendar/issues"
   },
-  "homepage": "https://github.com/mhm/ng-cyrus-calendar#readme",
+  "homepage": "https://github.com/mhmfofa/cyrus-calendar#readme",
   "peerDependencies": {
     "@angular/common": ">=17.0.0",
     "@angular/core": ">=17.0.0",
