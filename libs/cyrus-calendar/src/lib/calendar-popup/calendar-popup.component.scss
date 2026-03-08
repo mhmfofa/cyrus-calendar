@@ -1,0 +1,338 @@
+// ─── Design tokens ───────────────────────────────────────────────────────────
+$primary: #0d9488;
+$primary-light: #ccfbf1;
+$primary-dark: #0f766e;
+$danger: #ef4444;
+$text: #1e293b;
+$text-muted: #64748b;
+$border: #e2e8f0;
+$bg: #ffffff;
+$bg-hover: #f1f5f9;
+$shadow: 0 8px 32px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .06);
+$radius-popup: 14px;
+$radius-btn: 8px;
+$transition: 150ms ease;
+
+// ─── Host ─────────────────────────────────────────────────────────────────────
+:host {
+  width: 284px;
+  height: 0;
+  display: block;
+  position: relative;
+  z-index: 9999;
+
+  // ── Popup panel ────────────────────────────────────────────────────────────
+  >div {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 284px;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: $bg;
+    border: 1px solid $border;
+    border-radius: $radius-popup;
+    box-shadow: $shadow;
+    z-index: 9999;
+    box-sizing: border-box;
+    font-family: IRANSans, -apple-system, Inter, 'Segoe UI', Arial, sans-serif;
+  }
+
+  // ── Persian calendar font ──────────────────────────────────────────────────
+  .persian-calendar {
+    font-family: IRANSansFaNum, IRANSans, Tahoma, Arial, sans-serif !important;
+  }
+
+  // ── Generic button reset ───────────────────────────────────────────────────
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    background: $bg;
+    color: $text;
+    border-radius: $radius-btn;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background $transition, color $transition;
+    font-size: 13px;
+    font-family: inherit; // ensure font inherits from .persian-calendar ancestor
+
+    &:hover:not(:disabled) {
+      background: $bg-hover;
+    }
+
+    &:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+
+    &.active {
+      background: $primary !important;
+      color: #fff !important;
+      font-weight: 600;
+    }
+  }
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid $border;
+    margin-bottom: 8px;
+
+    .nav-btn {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      font-size: 20px;
+      color: $text-muted;
+      padding: 0;
+    }
+
+    .header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .month-btn,
+    .year-btn {
+      font-size: 14px;
+      font-weight: 600;
+      color: $text;
+      padding: 4px 8px;
+      height: 30px;
+
+      &:hover {
+        background: $primary-light;
+        color: $primary-dark;
+      }
+    }
+
+    .today-btn {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      font-size: 10px;
+      color: $primary;
+      border: 1.5px solid $primary;
+      padding: 0;
+
+      &:hover {
+        background: $primary-light;
+      }
+    }
+  }
+
+  // ── Content wrapper (position context for overlays) ────────────────────────
+  .content {
+    position: relative;
+  }
+
+  // ── Week-day labels ────────────────────────────────────────────────────────
+  .weekDays {
+    display: flex;
+    padding: 0 0 6px;
+
+    >span {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: $text-muted;
+    }
+  }
+
+  // ── Day grid ───────────────────────────────────────────────────────────────
+  .days {
+    display: flex;
+    flex-wrap: wrap;
+
+    >button {
+      width: calc(14.2857% - 2px);
+      height: 34px;
+      margin: 1px;
+      font-size: 12px;
+      padding: 0;
+
+      &.day {}
+
+      &.weekend {
+        color: $danger;
+      }
+
+      &.today:not(.active) {
+        font-weight: 700;
+        border: 2px solid $primary;
+        color: $primary;
+      }
+    }
+  }
+
+  // ── Month / Year overlay shared styles ────────────────────────────────────
+  .month-dialog,
+  .year-dialog {
+    position: absolute;
+    inset: 0;
+    background: $bg;
+    border-radius: 8px;
+    transform: scale(0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform $transition, opacity $transition;
+    transform-origin: center top;
+
+    &.show {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  // ── Month picker grid ─────────────────────────────────────────────────────
+  .month-dialog {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    padding: 4px;
+
+    >button {
+      width: calc(33.33% - 4px);
+      height: 46px;
+      margin: 2px;
+      font-size: 13px;
+    }
+  }
+
+  // ── Year picker grid ──────────────────────────────────────────────────────
+  .year-dialog {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+
+    .year-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 0 2px;
+
+      span {
+        font-size: 13px;
+        font-weight: 600;
+        color: $text;
+      }
+
+      button {
+        width: 30px;
+        height: 30px;
+        font-size: 20px;
+        color: $text-muted;
+        padding: 0;
+      }
+    }
+
+    .year-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      button {
+        width: calc(25% - 4px);
+        height: 40px;
+        margin: 2px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  // ── Divider ───────────────────────────────────────────────────────────────
+  .divider {
+    border: none;
+    border-top: 1px solid $border;
+    margin: 12px 0;
+  }
+
+  // ── Time picker ───────────────────────────────────────────────────────────
+  .time-row {
+    direction: ltr;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding-top: 4px;
+
+    .time-sep {
+      font-size: 18px;
+      font-weight: 700;
+      color: $text-muted;
+      margin-bottom: 2px;
+    }
+
+    .time-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+
+      .time-btn {
+        width: 32px;
+        height: 28px;
+        font-size: 18px;
+        color: $text-muted;
+        padding: 0;
+        transform: rotate(-90deg);
+
+      }
+
+      .time-input {
+        width: 48px;
+        height: 34px;
+        text-align: center;
+        border: 1px solid $border;
+        border-radius: $radius-btn;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text;
+        outline: none;
+        // hide native number spinners
+        -moz-appearance: textfield;
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        &:focus {
+          border-color: $primary;
+          box-shadow: 0 0 0 3px rgba($primary, .15);
+        }
+      }
+    }
+
+    .confirm-btn {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      margin-inline-start: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      background: $primary;
+      border-radius: $radius-btn;
+
+      &:hover:not(:disabled) {
+        background: $primary-dark;
+      }
+    }
+  }
+}

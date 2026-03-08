@@ -1,0 +1,115 @@
+<!-- ═══════════════════ TOP NAVBAR ═══════════════════ -->
+<nav class="navbar navbar-expand-md navbar-dark bg-dark px-3 sticky-top">
+  <span class="navbar-brand fw-bold">📅 ng-cyrus-calendar</span>
+  <div class="ms-auto">
+    <ul class="nav nav-pills">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab() === 'demo'"
+          (click)="activeTab.set('demo')">
+          Demo
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab() === 'docs'"
+          (click)="activeTab.set('docs')">
+          Documentation
+        </button>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════════════ DEMO TAB ════════════════════ -->
+@if (activeTab() === 'demo') {
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+
+          <form [formGroup]="bookingForm" novalidate>
+            <fieldset class="mb-4">
+              <legend class="col-form-label pt-0 fw-semibold mb-2">نوع تقویم</legend>
+
+              <div class="btn-group" role="group" aria-label="نوع تقویم">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="calendarType"
+                  id="calendarImperial"
+                  [checked]="selectedCalendarType() === datePickerType.Imperial"
+                  (change)="setCalendarType(datePickerType.Imperial)"
+                />
+                <label class="btn btn-outline-primary" for="calendarImperial">شاهنشاهی</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="calendarType"
+                  id="calendarShamsi"
+                  [checked]="selectedCalendarType() === datePickerType.Shamsi"
+                  (change)="setCalendarType(datePickerType.Shamsi)"
+                />
+                <label class="btn btn-outline-primary" for="calendarShamsi">شمسی</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="calendarType"
+                  id="calendarGregorian"
+                  [checked]="selectedCalendarType() === datePickerType.Gregorian"
+                  (change)="setCalendarType(datePickerType.Gregorian)"
+                />
+                <label class="btn btn-outline-primary" for="calendarGregorian">میلادی</label>
+              </div>
+            </fieldset>
+
+            <div class="mb-3 position-relative">
+              <label class="form-label fw-semibold" for="dateInput">تاریخ</label>
+              <input
+                type="text"
+                id="dateInput"
+                #dateInput
+                #cyrusCalendar="cyrusCalendar"
+                class="form-control ltr text-right"
+                formControlName="dateInput"
+                cyrus-calendar
+                [calendar-type]="selectedCalendarType()"
+                [disable-past-days]="true"
+                (focus)="calendarPopup.open()"
+                (click)="calendarPopup.open()"
+                (input)="calendarPopup.writeValue(dateInput.value)"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-autocomplete="none"
+                inputmode="none"
+              />
+
+              <calendar-popup
+                #calendarPopup
+                [input]="dateInput"
+                [time]="true"
+                [directive]="cyrusCalendar"
+                [ngModel]="bookingForm.controls.dateInput.value"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onDateSelected($event)">
+              </calendar-popup>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+} <!-- /demo tab -->
+
+<!-- ═══════════════════ DOCS TAB ════════════════════ -->
+@if (activeTab() === 'docs') {
+  <app-docs></app-docs>
+}

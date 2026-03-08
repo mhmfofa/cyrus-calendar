@@ -1,0 +1,656 @@
+<div class="docs-page">
+
+  <!-- ═══════════════════════ HERO ═══════════════════════ -->
+  <div class="docs-hero py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <h1 class="display-5 fw-bold mb-2">ng-cyrus-calendar</h1>
+          <p class="lead text-muted mb-3">
+            A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali) and Imperial calendars with full RTL / LTR support.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-primary fs-sm">Angular 17+</span>
+            <span class="badge bg-success fs-sm">MIT License</span>
+            <span class="badge bg-secondary fs-sm">Standalone Components</span>
+            <span class="badge bg-info text-dark fs-sm">SSR Compatible</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row">
+
+      <!-- ═══════════════════ SIDEBAR NAV ═══════════════════ -->
+      <div class="col-lg-3 d-none d-lg-block">
+        <div class="docs-nav sticky-top" style="top: 1rem;">
+          <p class="fw-semibold text-uppercase text-muted small mb-2 px-3">Getting Started</p>
+          <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="#installation">Installation</a></li>
+            <li class="nav-item"><a class="nav-link" href="#quick-start">Quick Start</a></li>
+            <li class="nav-item"><a class="nav-link" href="#module-setup">Module Setup</a></li>
+          </ul>
+          <p class="fw-semibold text-uppercase text-muted small mb-2 px-3 mt-3">API Reference</p>
+          <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="#directive-api">Directive: cyrus-calendar</a></li>
+            <li class="nav-item"><a class="nav-link" href="#component-api">Component: calendar-popup</a></li>
+            <li class="nav-item"><a class="nav-link" href="#enum-api">Enum: DatePickerType</a></li>
+            <li class="nav-item"><a class="nav-link" href="#format">Date Format Tokens</a></li>
+          </ul>
+          <p class="fw-semibold text-uppercase text-muted small mb-2 px-3 mt-3">Examples</p>
+          <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="#ex-basic">Basic Usage</a></li>
+            <li class="nav-item"><a class="nav-link" href="#ex-gregorian">Gregorian Calendar</a></li>
+            <li class="nav-item"><a class="nav-link" href="#ex-restrictions">Date Restrictions</a></li>
+            <li class="nav-item"><a class="nav-link" href="#ex-calendar-switch">Calendar Switcher</a></li>
+            <li class="nav-item"><a class="nav-link" href="#ex-publish">Publishing to npm</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ MAIN CONTENT ══════════════════ -->
+      <div class="col-lg-9">
+
+        <!-- ─── Installation ─── -->
+        <section id="installation" class="mb-5">
+          <h2 class="section-title">Installation</h2>
+          <pre class="code-block"><code>npm install ng-cyrus-calendar</code></pre>
+          <p class="mt-3 text-muted">The package bundles the IRANSans font internally for Persian/Arabic calendars — no CDN or extra font setup needed.</p>
+          <p class="text-muted">If you use the Shamsi (Jalali) calendar, <code>jalali-moment</code> is also required:</p>
+          <pre class="code-block"><code>npm install jalali-moment</code></pre>
+        </section>
+
+        <!-- ─── Quick Start ─── -->
+        <section id="quick-start" class="mb-5">
+          <h2 class="section-title">Quick Start</h2>
+          <p>Add the directive <code>cyrus-calendar</code> to any <code>&lt;input&gt;</code> element and place a <code>&lt;calendar-popup&gt;</code> next to it. Pass the input's template reference via <code>[input]</code> and the directive reference via <code>[directive]</code>.</p>
+          <pre class="code-block"><code>&lt;!-- Template --&gt;
+&lt;input
+  type="text"
+  #myInput
+  #cal="cyrusCalendar"
+  cyrus-calendar
+  [calendar-type]="DatePickerType.Shamsi"
+  [(ngModel)]="selectedDate"
+/&gt;
+
+&lt;calendar-popup
+  [input]="myInput"
+  [directive]="cal"
+  [(ngModel)]="selectedDate"&gt;
+&lt;/calendar-popup&gt;</code></pre>
+        </section>
+
+        <!-- ─── Module Setup ─── -->
+        <section id="module-setup" class="mb-5">
+          <h2 class="section-title">Module Setup</h2>
+
+          <h5 class="fw-semibold mt-3">NgModule-based app</h5>
+          <pre class="code-block"><code>import &#123; CalendarPopupComponent, CyrusCalendarDirective &#125; from 'ng-cyrus-calendar';
+
+&#64;NgModule(&#123;
+  imports: [
+    CommonModule,
+    FormsModule,        // or ReactiveFormsModule
+    CalendarPopupComponent,
+    CyrusCalendarDirective,
+  ]
+&#125;)
+export class AppModule &#123; &#125;</code></pre>
+
+          <h5 class="fw-semibold mt-4">Standalone component</h5>
+          <pre class="code-block"><code>import &#123; CalendarPopupComponent, CyrusCalendarDirective &#125; from 'ng-cyrus-calendar';
+
+&#64;Component(&#123;
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    CalendarPopupComponent,
+    CyrusCalendarDirective,
+  ],
+&#125;)
+export class MyComponent &#123; &#125;</code></pre>
+
+          <h5 class="fw-semibold mt-4">Optional: global configuration</h5>
+          <p>Use <code>CyrusCalendarConfigService</code> to set defaults once at the root level:</p>
+          <pre class="code-block"><code>// app.module.ts or app.config.ts
+import &#123; CyrusCalendarConfigService &#125; from 'ng-cyrus-calendar';
+
+// In providers or in the constructor:
+configService.defaultCalendarType.set(DatePickerType.Gregorian);
+configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
+        </section>
+
+        <!-- ─── Directive API ─── -->
+        <section id="directive-api" class="mb-5">
+          <h2 class="section-title">Directive: <code>cyrus-calendar</code></h2>
+          <p>Applied directly on <code>&lt;input&gt;</code> elements. Export as <code>#myRef="cyrusCalendar"</code> to pass to <code>&lt;calendar-popup [directive]="myRef"&gt;</code>.</p>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Input</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>[calendar-type]</code></td>
+                  <td><code>DatePickerType</code></td>
+                  <td><code>'imperial'</code></td>
+                  <td>Sets the active calendar system. Automatically updates the placeholder language.</td>
+                </tr>
+                <tr>
+                  <td><code>[disable-weekends]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Prevents selection of weekend days (Fri/Sat for Persian, Sat/Sun for Gregorian).</td>
+                </tr>
+                <tr>
+                  <td><code>[disable-past-days]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Prevents selection of any date before today.</td>
+                </tr>
+                <tr>
+                  <td><code>[placeholder]</code></td>
+                  <td><code>string</code></td>
+                  <td><em>auto</em></td>
+                  <td>Custom placeholder text. When omitted, auto-sets to <em>"انتخاب تاریخ"</em> for Persian or <em>"Select a date"</em> for Gregorian.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ─── Component API ─── -->
+        <section id="component-api" class="mb-5">
+          <h2 class="section-title">Component: <code>&lt;calendar-popup&gt;</code></h2>
+          <p>Implements <strong>ControlValueAccessor</strong> — works with both <code>ngModel</code> and reactive <code>formControl</code> / <code>formControlName</code>.</p>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Input</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="table-primary">
+                  <td><code>[input]</code></td>
+                  <td><code>HTMLInputElement</code></td>
+                  <td>—</td>
+                  <td><strong>Required.</strong> Template reference of the attached input element.</td>
+                </tr>
+                <tr class="table-primary">
+                  <td><code>[directive]</code></td>
+                  <td><code>CyrusCalendarDirective</code></td>
+                  <td><code>null</code></td>
+                  <td><strong>Recommended.</strong> Pass the directive reference to automatically inherit <code>calendar-type</code>, <code>disable-weekends</code>, and <code>disable-past-days</code>. Avoids duplicate bindings.</td>
+                </tr>
+                <tr>
+                  <td><code>[calendar-type]</code></td>
+                  <td><code>DatePickerType</code></td>
+                  <td><code>'shamsi'</code></td>
+                  <td>Calendar system. Ignored when <code>[directive]</code> is provided.</td>
+                </tr>
+                <tr>
+                  <td><code>[format]</code></td>
+                  <td><code>string</code></td>
+                  <td><code>'yyyy/MM/dd'</code></td>
+                  <td>Display format shown inside the input element. Uses slashes — e.g. <code>1403/06/15</code>. Does not affect the stored/emitted value.</td>
+                </tr>
+                <tr>
+                  <td><code>[value-format]</code></td>
+                  <td><code>string</code></td>
+                  <td><code>'yyyy-MM-dd'</code></td>
+                  <td>Format of the value emitted to <code>ngModel</code> / <code>formControl</code>. Uses hyphens — e.g. <code>1403-06-15</code>. ISO-style, suitable for storage or API calls.</td>
+                </tr>
+                <tr>
+                  <td><code>[min]</code></td>
+                  <td><code>string</code></td>
+                  <td><code>null</code></td>
+                  <td>Minimum selectable date. Must match the <code>[format]</code> pattern.</td>
+                </tr>
+                <tr>
+                  <td><code>[max]</code></td>
+                  <td><code>string</code></td>
+                  <td><code>null</code></td>
+                  <td>Maximum selectable date. Must match the <code>[format]</code> pattern.</td>
+                </tr>
+                <tr>
+                  <td><code>[disable-weekends]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Disable weekends. Overridden by <code>[directive]</code> value when provided.</td>
+                </tr>
+                <tr>
+                  <td><code>[disable-past-days]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Disable past dates (sets <code>min</code> to today). Overridden by <code>[directive]</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>[from-tomorow]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Only allow selection from tomorrow onwards (sets <code>min</code> to tomorrow).</td>
+                </tr>
+                <tr>
+                  <td><code>[date]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>true</code></td>
+                  <td>Show the date picker panel.</td>
+                </tr>
+                <tr>
+                  <td><code>[time]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Show the time picker panel (hour/minute/second).</td>
+                </tr>
+                <tr>
+                  <td><code>[time-format]</code></td>
+                  <td><code>string</code></td>
+                  <td><code>'hh:mm:ss'</code></td>
+                  <td>Format for the time part. Only used when <code>[time]="true"</code>. The full stored value becomes <code>[format]T[time-format]</code> and the input displays <code>[format] - [time-format]</code>. Tokens: <code>hh</code> (hour), <code>mm</code> (minute), <code>ss</code> (second).</td>
+                </tr>
+                <tr>
+                  <td><code>[multiple]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Allow selecting multiple dates (comma-separated value string).</td>
+                </tr>
+                <tr>
+                  <td><code>[range]</code></td>
+                  <td><code>boolean</code></td>
+                  <td><code>false</code></td>
+                  <td>Allow selecting a date range (start and end date).</td>
+                </tr>
+                <tr>
+                  <td><code>[options]</code></td>
+                  <td><code>DatePickerOptions</code></td>
+                  <td>—</td>
+                  <td>Advanced configuration object. Overrides individual inputs when provided.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-semibold mt-4">Methods</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr><th>Method</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>open()</code></td><td>Programmatically open the calendar popup.</td></tr>
+                <tr><td><code>close()</code></td><td>Programmatically close the calendar popup.</td></tr>
+                <tr><td><code>writeValue(value)</code></td><td>Set the displayed date value (standard CVA method).</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ─── Enum ─── -->
+        <section id="enum-api" class="mb-5">
+          <h2 class="section-title">Enum: <code>DatePickerType</code></h2>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr><th>Value</th><th>String</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>DatePickerType.Shamsi</code></td><td><code>'shamsi'</code></td><td>Jalali / Solar Hijri calendar (1400s). RTL layout, Persian digits and month names.</td></tr>
+                <tr><td><code>DatePickerType.Imperial</code></td><td><code>'imperial'</code></td><td>Imperial / Shahanshahi calendar (2500s). RTL layout, Persian digits and month names.</td></tr>
+                <tr><td><code>DatePickerType.Gregorian</code></td><td><code>'gregorian'</code></td><td>Standard Gregorian calendar. LTR layout, Monday as first day, English month names.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ─── Format Tokens ─── -->
+        <section id="format" class="mb-5">
+          <h2 class="section-title">Date Format Tokens</h2>
+          <p>The <code>[format]</code> input uses the following tokens (case-sensitive):</p>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr><th>Token</th><th>Output</th><th>Example</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>yyyy</code></td><td>4-digit year</td><td>1403, 2025</td></tr>
+                <tr><td><code>yy</code></td><td>2-digit year</td><td>03, 25</td></tr>
+                <tr><td><code>MM</code></td><td>2-digit month (zero-padded)</td><td>01 – 12</td></tr>
+                <tr><td><code>M</code></td><td>Month without leading zero</td><td>1 – 12</td></tr>
+                <tr><td><code>dd</code></td><td>2-digit day (zero-padded)</td><td>01 – 31</td></tr>
+                <tr><td><code>d</code></td><td>Day without leading zero</td><td>1 – 31</td></tr>
+                <tr><td><code>hh</code></td><td>24-hour (zero-padded)</td><td>00 – 23</td></tr>
+                <tr><td><code>mm</code></td><td>Minutes (zero-padded)</td><td>00 – 59</td></tr>
+                <tr><td><code>ss</code></td><td>Seconds (zero-padded)</td><td>00 – 59</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-muted"><strong>Default format:</strong> <code>yyyy/MM/dd</code></p>
+        </section>
+
+        <!-- ══════════════════ EXAMPLES ════════════════════ -->
+        <h2 class="section-title border-top pt-4" id="examples">Live Examples</h2>
+
+        <!-- ─── Example 1: Basic Shamsi ─── -->
+        <section id="ex-basic" class="mb-5">
+          <h4 class="example-title">1 — Basic Shamsi (Jalali) Picker</h4>
+          <p class="text-muted">The default calendar type. No extra configuration needed.</p>
+
+          <div class="example-preview">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">تاریخ (شمسی)</label>
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex1Input
+                    #ex1Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="DatePickerType.Shamsi"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    #ex1Pop
+                    [input]="ex1Input"
+                    [directive]="ex1Dir"
+                    [ngModel]="example1Value()"
+                    (ngModelChange)="example1Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value: <code>{{ example1Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>&lt;input
+  type="text"
+  #myInput
+  #cal="cyrusCalendar"
+  class="form-control"
+  cyrus-calendar
+  [calendar-type]="DatePickerType.Shamsi"
+  [(ngModel)]="selectedDate"
+  autocomplete="off"
+  inputmode="none"
+/&gt;
+
+&lt;calendar-popup
+  [input]="myInput"
+  [directive]="cal"
+  [(ngModel)]="selectedDate"&gt;
+&lt;/calendar-popup&gt;</code></pre>
+        </section>
+
+        <!-- ─── Example 2: Gregorian ─── -->
+        <section id="ex-gregorian" class="mb-5">
+          <h4 class="example-title">2 — Gregorian Calendar (LTR, Monday-first)</h4>
+          <p class="text-muted">Switches to an English LTR layout with Monday as the first day of the week.</p>
+
+          <div class="example-preview">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Date (Gregorian)</label>
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex2Input
+                    #ex2Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="DatePickerType.Gregorian"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    [input]="ex2Input"
+                    [directive]="ex2Dir"
+                    [ngModel]="example2Value()"
+                    (ngModelChange)="example2Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value: <code>{{ example2Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>&lt;input cyrus-calendar [calendar-type]="DatePickerType.Gregorian" ... /&gt;</code></pre>
+        </section>
+
+        <!-- ─── Example 3: Date Restrictions ─── -->
+        <section id="ex-restrictions" class="mb-5">
+          <h4 class="example-title">3 — Disable Past Days &amp; Weekends</h4>
+          <p class="text-muted">Combine <code>[disable-past-days]</code> and <code>[disable-weekends]</code> to restrict the selectable range.</p>
+
+          <div class="example-preview">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">تاریخ تحویل</label>
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex3Input
+                    #ex3Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="DatePickerType.Shamsi"
+                    [disable-past-days]="true"
+                    [disable-weekends]="true"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    [input]="ex3Input"
+                    [directive]="ex3Dir"
+                    [ngModel]="example3Value()"
+                    (ngModelChange)="example3Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value: <code>{{ example3Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>&lt;input
+  cyrus-calendar
+  [calendar-type]="DatePickerType.Shamsi"
+  [disable-past-days]="true"
+  [disable-weekends]="true"
+  ...
+/&gt;</code></pre>
+        </section>
+
+        <!-- ─── Example 4: Date + Time ─── -->
+        <section class="mb-5">
+          <h4 class="example-title">4 — Date &amp; Time Picker</h4>
+          <p class="text-muted">Add <code>[time]="true"</code> to the popup to enable time selection.</p>
+
+          <div class="example-preview">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">زمان جلسه</label>
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex4Input
+                    #ex4Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="DatePickerType.Shamsi"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    [input]="ex4Input"
+                    [directive]="ex4Dir"
+                    [time]="true"
+                    [ngModel]="example4Value()"
+                    (ngModelChange)="example4Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value: <code>{{ example4Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>&lt;calendar-popup
+  [input]="myInput"
+  [directive]="cal"
+  [time]="true"
+  [(ngModel)]="selectedDateTime"&gt;
+&lt;/calendar-popup&gt;
+
+&lt;!-- Optional: customise the time part of the format (default: hh:mm:ss) --&gt;
+&lt;calendar-popup [time]="true" [time-format]="'hh:mm'" ...&gt;&lt;/calendar-popup&gt;
+
+&lt;!-- Value stored &amp; emitted: 1403/06/15T14:30:00  --&gt;
+&lt;!-- Input shows:              1403/06/15 - 14:30:00 --&gt;</code></pre>
+        </section>
+
+        <!-- ─── Example 5: Calendar Switcher ─── -->
+        <section id="ex-calendar-switch" class="mb-5">
+          <h4 class="example-title">5 — Calendar Switcher (value preserved on type change)</h4>
+          <p class="text-muted">
+            When the user switches calendar type, the existing value is automatically converted to the new system — no data is lost.
+          </p>
+
+          <div class="example-preview">
+            <div class="mb-3">
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" id="docs-imperial" name="docsCalType"
+                  [checked]="example5CalType() === DatePickerType.Imperial"
+                  (change)="setEx5CalType(DatePickerType.Imperial)" />
+                <label class="btn btn-outline-primary" for="docs-imperial">شاهنشاهی</label>
+
+                <input type="radio" class="btn-check" id="docs-shamsi" name="docsCalType"
+                  [checked]="example5CalType() === DatePickerType.Shamsi"
+                  (change)="setEx5CalType(DatePickerType.Shamsi)" />
+                <label class="btn btn-outline-primary" for="docs-shamsi">شمسی</label>
+
+                <input type="radio" class="btn-check" id="docs-gregorian" name="docsCalType"
+                  [checked]="example5CalType() === DatePickerType.Gregorian"
+                  (change)="setEx5CalType(DatePickerType.Gregorian)" />
+                <label class="btn btn-outline-primary" for="docs-gregorian">میلادی</label>
+              </div>
+            </div>
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex5Input
+                    #ex5Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="example5CalType()"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    [input]="ex5Input"
+                    [directive]="ex5Dir"
+                    [ngModel]="example5Value()"
+                    (ngModelChange)="example5Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value: <code>{{ example5Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>// Component
+calendarType = signal&lt;DatePickerType&gt;(DatePickerType.Imperial);
+
+// Template
+&lt;input
+  cyrus-calendar
+  [calendar-type]="calendarType()"
+  ...
+/&gt;</code></pre>
+        </section>
+
+        <!-- ─── Publishing to npm ─── -->
+        <section id="ex-publish" class="mb-5">
+          <h2 class="section-title border-top pt-4">Publishing to npm</h2>
+          <p>The project uses <a href="https://github.com/ng-packagr/ng-packagr" target="_blank">ng-packagr</a> to build a proper Angular Package Format (APF) distributable.</p>
+
+          <h5 class="fw-semibold mt-4">1. Build the library</h5>
+          <pre class="code-block"><code>npm run build:lib</code></pre>
+          <p class="text-muted">Output will be placed in <code>dist/cyrus-calendar/</code>. The folder includes compiled ESM + CJS bundles, type declarations, and the bundled IRANSans fonts.</p>
+
+          <h5 class="fw-semibold mt-4">2. Log in to npm</h5>
+          <pre class="code-block"><code>npm login</code></pre>
+          <p class="text-muted">Requires an account at <a href="https://www.npmjs.com/" target="_blank">npmjs.com</a>. Your username, password, and a one-time code from your email or authenticator app will be requested.</p>
+
+          <h5 class="fw-semibold mt-4">3. Publish the built package</h5>
+          <pre class="code-block"><code>cd dist/cyrus-calendar
+npm publish --access public</code></pre>
+          <div class="alert alert-info">
+            <strong>Important:</strong> Always publish from <code>dist/cyrus-calendar</code>, not from the root workspace folder. The <code>dist</code> folder contains the compiled library only — no dev dependencies or source files.
+          </div>
+
+          <h5 class="fw-semibold mt-4">4. Bump the version before each release</h5>
+          <p>Update the <code>version</code> field in <code>libs/cyrus-calendar/package.json</code> before rebuilding and republishing:</p>
+          <pre class="code-block"><code># patch: 1.0.0 → 1.0.1
+npm version patch --prefix libs/cyrus-calendar
+
+# minor: 1.0.0 → 1.1.0
+npm version minor --prefix libs/cyrus-calendar
+
+# major: 1.0.0 → 2.0.0
+npm version major --prefix libs/cyrus-calendar
+
+# then rebuild
+npm run build:lib
+cd dist/cyrus-calendar &amp;&amp; npm publish --access public</code></pre>
+
+          <h5 class="fw-semibold mt-4">5. (Optional) Publish a beta / pre-release</h5>
+          <pre class="code-block"><code># in libs/cyrus-calendar/package.json set: "version": "1.1.0-beta.1"
+npm publish --access public --tag beta
+
+# install beta in a consumer project
+npm install ng-cyrus-calendar@beta</code></pre>
+
+          <h5 class="fw-semibold mt-4">6. Verify the published package</h5>
+          <pre class="code-block"><code>npm info ng-cyrus-calendar</code></pre>
+        </section>
+
+      </div><!-- /col-lg-9 -->
+    </div><!-- /row -->
+  </div><!-- /container -->
+</div>

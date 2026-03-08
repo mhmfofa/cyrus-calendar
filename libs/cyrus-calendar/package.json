@@ -1,0 +1,33 @@
+{
+  "name": "ng-cyrus-calendar",
+  "version": "1.0.0",
+  "description": "A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali) and Imperial calendars with RTL/LTR support.",
+  "keywords": [
+    "angular",
+    "datepicker",
+    "date-picker",
+    "jalali",
+    "shamsi",
+    "persian",
+    "calendar",
+    "imperial",
+    "hijri",
+    "rtl"
+  ],
+  "author": "mhm",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mhm/ng-cyrus-calendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mhm/ng-cyrus-calendar/issues"
+  },
+  "homepage": "https://github.com/mhm/ng-cyrus-calendar#readme",
+  "peerDependencies": {
+    "@angular/common": ">=17.0.0",
+    "@angular/core": ">=17.0.0",
+    "@angular/forms": ">=17.0.0",
+    "jalali-moment": "^3.3.11"
+  }
+}

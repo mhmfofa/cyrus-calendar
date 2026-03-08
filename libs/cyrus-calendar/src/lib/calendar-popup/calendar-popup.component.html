@@ -1,0 +1,137 @@
+@if (show()) {
+  <div (click)="focus()" [dir]="activeOptions.language === 'fa' ? 'rtl' : 'ltr'">
+    @if (date()) {
+      <div class="date" [class.persian-calendar]="effectiveCalendarType() !== 'gregorian'">
+        <div class="header">
+          <button class="nav-btn" (click)="prevMonth()"
+            [title]="activeOptions.language === 'fa' ? '\u0645\u0627\u0647 \u0642\u0628\u0644' : 'Previous month'">
+            &#8249;
+          </button>
+          <div class="header-center">
+            <button class="month-btn" (click)="toggleMonth()">
+              {{ monthesName[item.getMonth() - 1] }}
+            </button>
+            <button class="year-btn" (click)="toggleYear()">
+              {{ item.getYear() }}
+            </button>
+          </div>
+          <button class="today-btn" (click)="today()"
+            [title]="activeOptions.language === 'fa' ? '\u0628\u0631\u0648 \u0628\u0647 \u0627\u0645\u0631\u0648\u0632' : 'Go to today'">
+            &#9679;
+          </button>
+          <button class="nav-btn" (click)="nextMonth()"
+            [title]="activeOptions.language === 'fa' ? '\u0645\u0627\u0647 \u0628\u0639\u062f' : 'Next month'">
+            &#8250;
+          </button>
+        </div>
+
+        <div class="content">
+          <div class="day-dialog">
+            <div class="weekDays">
+              @for (week of weekDaysName; track $index) {
+                <span>{{ week }}</span>
+              }
+            </div>
+            <div class="days">
+              @for (day of getDays(); track $index; let index = $index) {
+                <button
+                  [ngClass]="{
+                    day: day != null,
+                    active: day && isActive(day),
+                    weekend: isWeekend(index),
+                    today: day && isToday(day, item.getMonth(), item.getYear()),
+                  }"
+                  [disabled]="!day || isDisabled(day, index)"
+                  (click)="setDay(day)"
+                >
+                  {{ day }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="month-dialog" [ngClass]="{ show: monthDialog() }">
+            @for (month of monthesName; track $index; let index = $index) {
+              <button
+                [ngClass]="{ active: index == item.getMonth() - 1 }"
+                (click)="setMonth(index + 1)"
+              >
+                {{ month }}
+              </button>
+            }
+          </div>
+
+          <div class="year-dialog" [ngClass]="{ show: yearDialog() }">
+            <div class="year-nav">
+              <button (click)="prevYearRange()">&#8249;</button>
+              <span
+                >{{ yearRangeStart() }}&nbsp;&ndash;&nbsp;{{
+                  yearRangeStart() + 11
+                }}</span
+              >
+              <button (click)="nextYearRange()">&#8250;</button>
+            </div>
+            <div class="year-grid">
+              @for (year of getYearRange(); track year) {
+                <button
+                  [ngClass]="{ active: year === item.getYear() }"
+                  (click)="selectYear(year)"
+                >
+                  {{ year }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (date() && time()) {
+      <div><hr class="divider" /></div>
+    }
+
+    @if (time()) {
+      <div class="time-row" (click)="$event.stopPropagation()">
+        <div class="time-unit">
+          <button class="time-btn up" (click)="addHours(1)">&#8250;</button>
+          <input
+            class="time-input"
+            type="number"
+            min="0" max="23"
+            [ngModel]="item.getHour()"
+            (ngModelChange)="setHour($event)"
+          />
+          <button class="time-btn down" (click)="addHours(-1)">&#8249;</button>
+        </div>
+        <span class="time-sep">:</span>
+        <div class="time-unit">
+          <button class="time-btn" (click)="addMinutes(1)">&#8250;</button>
+          <input
+            class="time-input"
+            type="number"
+            min="0" max="59"
+            [ngModel]="item.getMinute()"
+            (ngModelChange)="setMinute($event)"
+          />
+          <button class="time-btn" (click)="addMinutes(-1)">&#8249;</button>
+        </div>
+        <span class="time-sep">:</span>
+        <div class="time-unit">
+          <button class="time-btn" (click)="addSeconds(1)">&#8250;</button>
+          <input
+            class="time-input"
+            type="number"
+            min="0" max="59"
+            [ngModel]="item.getSecond()"
+            (ngModelChange)="setSecond($event)"
+          />
+          <button class="time-btn" (click)="addSeconds(-1)">&#8249;</button>
+        </div>
+        <button class="confirm-btn" (click)="setValue(); close()"
+          [title]="activeOptions.language === 'fa' ? '\u062a\u0623\u06cc\u06cc\u062f' : 'Confirm'">
+          &#10003;
+        </button>
+      </div>
+    }
+  </div>
+}
