@@ -23,5 +23,10 @@ export class DocsComponent {
   example5CalType = signal<DatePickerType>(DatePickerType.Imperial);
   example5Value = signal('');
 
+  // Example 6 – Hijri calendar
+  example6Value = signal('');
+  example6CalType = signal<DatePickerType>(DatePickerType.Hijri);
+
   setEx5CalType(type: DatePickerType) { this.example5CalType.set(type); }
+  setEx6CalType(type: DatePickerType) { this.example6CalType.set(type); }
 }

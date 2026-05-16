@@ -7,7 +7,7 @@
         <div class="col-lg-8">
           <h1 class="display-5 fw-bold mb-2">ng-cyrus-calendar</h1>
           <p class="lead text-muted mb-3">
-            A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali) and Imperial calendars with full RTL / LTR support.
+          A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali), Imperial and Hijri (Islamic) calendars with full RTL / LTR support.
           </p>
           <div class="d-flex flex-wrap gap-2">
             <span class="badge bg-primary fs-sm">Angular 17+</span>
@@ -49,6 +49,7 @@
             <li class="nav-item"><a class="nav-link" href="#component-api">Component: calendar-popup</a></li>
             <li class="nav-item"><a class="nav-link" href="#enum-api">Enum: DatePickerType</a></li>
             <li class="nav-item"><a class="nav-link" href="#format">Date Format Tokens</a></li>
+            <li class="nav-item"><a class="nav-link" href="#date-utils">Date Utility API</a></li>
           </ul>
           <p class="fw-semibold text-uppercase text-muted small mb-2 px-3 mt-3">Examples</p>
           <ul class="nav flex-column">
@@ -56,6 +57,7 @@
             <li class="nav-item"><a class="nav-link" href="#ex-gregorian">Gregorian Calendar</a></li>
             <li class="nav-item"><a class="nav-link" href="#ex-restrictions">Date Restrictions</a></li>
             <li class="nav-item"><a class="nav-link" href="#ex-calendar-switch">Calendar Switcher</a></li>
+            <li class="nav-item"><a class="nav-link" href="#ex-hijri">Hijri Calendar</a></li>
           </ul>
         </div>
       </div>
@@ -68,8 +70,12 @@
           <h2 class="section-title">Installation</h2>
           <pre class="code-block"><code>npm install ng-cyrus-calendar</code></pre>
           <p class="mt-3 text-muted">The package bundles the IRANSans font internally for Persian/Arabic calendars — no CDN or extra font setup needed.</p>
-          <p class="text-muted">If you use the Shamsi (Jalali) calendar, <code>jalali-moment</code> is also required:</p>
-          <pre class="code-block"><code>npm install jalali-moment</code></pre>
+          <p class="text-muted">Peer dependencies — install only what you need:</p>
+          <pre class="code-block"><code># Shamsi (Jalali) and Imperial calendars
+npm install jalaali-js
+
+# Hijri (Islamic / Umm al-Qura) calendar
+npm install moment-hijri</code></pre>
         </section>
 
         <!-- ─── Quick Start ─── -->
@@ -336,6 +342,7 @@ configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
                 <tr><td><code>DatePickerType.Shamsi</code></td><td><code>'shamsi'</code></td><td>Jalali / Solar Hijri calendar (1400s). RTL layout, Persian digits and month names.</td></tr>
                 <tr><td><code>DatePickerType.Imperial</code></td><td><code>'imperial'</code></td><td>Imperial / Shahanshahi calendar (2500s). RTL layout, Persian digits and month names.</td></tr>
                 <tr><td><code>DatePickerType.Gregorian</code></td><td><code>'gregorian'</code></td><td>Standard Gregorian calendar. LTR layout, Monday as first day, English month names.</td></tr>
+                <tr><td><code>DatePickerType.Hijri</code></td><td><code>'hijri'</code></td><td>Islamic Hijri calendar (Umm al-Qura). RTL layout, Sunday as first day, Arabic month names. Weekends are Friday &amp; Saturday.</td></tr>
               </tbody>
             </table>
           </div>
@@ -364,6 +371,60 @@ configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
             </table>
           </div>
           <p class="mt-2 text-muted"><strong>Default format:</strong> <code>yyyy/MM/dd</code></p>
+        </section>
+
+        <!-- ─── Date Utility API ─── -->
+        <section id="date-utils" class="mb-5">
+          <h2 class="section-title">Date Utility API</h2>
+          <p>The library exports static helpers on the <code>DateTime</code> class for converting between calendar systems. All four calendars are supported.</p>
+
+          <h5 class="fw-semibold mt-4">Gregorian → Other calendars</h5>
+          <pre class="code-block"><code>import &#123; DateTime, JDate, ADate, HDate &#125; from 'ng-cyrus-calendar';
+
+const jsDate = new Date('2026-05-16');
+
+// → Shamsi (Jalali)
+const jDate: JDate = DateTime.toJDate(jsDate);
+console.log(jDate.format('yyyy/MM/dd')); // 1405/02/26
+
+// → Imperial (Shahanshahi = Jalali + 1180)
+const aDate: ADate = DateTime.toADate(jsDate);
+console.log(aDate.format('yyyy/MM/dd')); // 2585/02/26
+
+// → Hijri (Islamic / Umm al-Qura)
+const hDate: HDate = DateTime.toHDate(jsDate);
+console.log(hDate.format('yyyy/MM/dd')); // 1447/11/17</code></pre>
+
+          <h5 class="fw-semibold mt-4">Other calendars → Gregorian</h5>
+          <pre class="code-block"><code>// Shamsi → Gregorian JS Date
+const jDate = new JDate(1405, 2, 26);
+const jsDate: Date = DateTime.toDate(jDate); // 2026-05-16
+
+// Imperial → Gregorian JS Date
+const aDate = new ADate(2585, 2, 26);
+const jsDate2: Date = DateTime.toDate(aDate); // 2026-05-16
+
+// Hijri → Gregorian JS Date  (uses moment-hijri / Umm al-Qura tables)
+const hDate = new HDate(1447, 11, 17);
+const jsDate3: Date = hDate.toDate(); // 2026-05-16</code></pre>
+
+          <h5 class="fw-semibold mt-4">Parse from string</h5>
+          <pre class="code-block"><code>// Shamsi string → JDate
+const jDate = DateTime.parseJDate('1405/02/26');
+
+// Imperial string → ADate
+const aDate = DateTime.parseADate('2585/02/26');
+
+// Hijri string → HDate
+const hDate = DateTime.parseHDate('1447/11/17');</code></pre>
+
+          <div class="alert alert-info mt-3">
+            <strong>&#128204; Peer dependencies for conversions:</strong>
+            <ul class="mb-0 mt-1">
+              <li>Shamsi / Imperial conversions require <code>jalaali-js</code></li>
+              <li>Hijri conversions require <code>moment-hijri</code></li>
+            </ul>
+          </div>
         </section>
 
         <!-- ══════════════════ EXAMPLES ════════════════════ -->
@@ -586,6 +647,11 @@ configService.defaultFormat.set('MM/dd/yyyy');</code></pre>
                   [checked]="example5CalType() === DatePickerType.Gregorian"
                   (change)="setEx5CalType(DatePickerType.Gregorian)" />
                 <label class="btn btn-outline-primary" for="docs-gregorian">میلادی</label>
+
+                <input type="radio" class="btn-check" id="docs-hijri" name="docsCalType"
+                  [checked]="example5CalType() === DatePickerType.Hijri"
+                  (change)="setEx5CalType(DatePickerType.Hijri)" />
+                <label class="btn btn-outline-primary" for="docs-hijri">هجری</label>
               </div>
             </div>
             <div class="row g-3 align-items-end">
@@ -626,6 +692,88 @@ calendarType = signal&lt;DatePickerType&gt;(DatePickerType.Imperial);
   [calendar-type]="calendarType()"
   ...
 /&gt;</code></pre>
+        </section>
+
+        <!-- ─── Example 6: Hijri Calendar ─── -->
+        <section id="ex-hijri" class="mb-5">
+          <h4 class="example-title">6 — Hijri Calendar (Islamic / Umm al-Qura)</h4>
+          <p class="text-muted">
+            Use <code>DatePickerType.Hijri</code> for the Islamic lunar calendar. The picker renders Arabic month names,
+            starts the week on Sunday, and highlights Friday &amp; Saturday as weekends.
+            The emitted value is always a standard <strong>Gregorian</strong> ISO string (e.g. <code>2026-03-08</code>),
+            regardless of the displayed calendar.
+          </p>
+
+          <div class="example-preview">
+            <div class="mb-3">
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" id="docs-hijri-ar" name="docsHijriLang"
+                  [checked]="example6CalType() === DatePickerType.Hijri"
+                  (change)="setEx6CalType(DatePickerType.Hijri)" />
+                <label class="btn btn-outline-primary" for="docs-hijri-ar">هجري (عربي)</label>
+
+                <input type="radio" class="btn-check" id="docs-hijri-en" name="docsHijriLang"
+                  [checked]="example6CalType() === DatePickerType.Gregorian"
+                  (change)="setEx6CalType(DatePickerType.Gregorian)" />
+                <label class="btn btn-outline-secondary" for="docs-hijri-en">Gregorian (EN)</label>
+              </div>
+            </div>
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <div class="position-relative">
+                  <input
+                    type="text"
+                    #ex6Input
+                    #ex6Dir="cyrusCalendar"
+                    class="form-control"
+                    cyrus-calendar
+                    [calendar-type]="example6CalType()"
+                    autocomplete="off"
+                    inputmode="none"
+                  />
+                  <calendar-popup
+                    [input]="ex6Input"
+                    [directive]="ex6Dir"
+                    [ngModel]="example6Value()"
+                    (ngModelChange)="example6Value.set($event)">
+                  </calendar-popup>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-light border mb-0">
+                  Value (Gregorian): <code>{{ example6Value() || '—' }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <pre class="code-block mt-3"><code>import &#123; DatePickerType &#125; from 'ng-cyrus-calendar';
+
+// Component
+example6Value = signal('');
+
+// Template
+&lt;input
+  type="text"
+  #hijriInput
+  #hijriDir="cyrusCalendar"
+  cyrus-calendar
+  [calendar-type]="DatePickerType.Hijri"
+  autocomplete="off"
+  inputmode="none"
+/&gt;
+&lt;calendar-popup
+  [input]="hijriInput"
+  [directive]="hijriDir"
+  [ngModel]="example6Value()"
+  (ngModelChange)="example6Value.set($event)"&gt;
+&lt;/calendar-popup&gt;</code></pre>
+
+          <div class="alert alert-info mt-3">
+            <strong>Peer dependencies:</strong>
+            Hijri support requires <code>moment-hijri</code>; Shamsi/Imperial support requires <code>jalaali-js</code>.
+            Run <code>npm install moment-hijri jalaali-js</code> to support all calendar types.
+          </div>
         </section>
 
       </div><!-- /col-lg-9 -->

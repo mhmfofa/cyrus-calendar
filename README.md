@@ -1,18 +1,18 @@
 # ng-cyrus-calendar
 
-A lightweight, multi-calendar Angular date picker supporting **Gregorian**, **Shamsi (Jalali / Persian)**, and **Imperial** calendars — with a modern UI, inline year-grid picker, and an optional time picker.
+A lightweight, multi-calendar Angular date picker supporting **Gregorian**, **Shamsi (Jalali / Persian)**, **Imperial**, and **Hijri (Islamic)** calendars — with a modern UI, inline year-grid picker, and an optional time picker.
 
 ---
 
 ## Features
 
-- **Three calendar systems**: Gregorian · Shamsi (Jalali) · Imperial
+- **Four calendar systems**: Gregorian · Shamsi (Jalali) · Imperial · Hijri (Islamic / Umm al-Qura)
 - **Year-grid picker**: click the year to browse and select from a 12-year grid
 - **Month-grid picker**: full month overlay
 - **Disable rules**: past days, weekends, specific dates, or a custom list
 - **Date ranges & multi-select**
 - **Optional time picker** (hours · minutes · seconds)
-- **RTL ready** — Persian month/weekday names built-in
+- **RTL ready** — Persian and Arabic month/weekday names built-in; Hijri uses Sunday-first week with Friday/Saturday weekends
 - **Separate display vs. value format** — show slashes to the user, store hyphens for APIs
 - **No jQuery** — pure Angular + Bootstrap 5
 - Signal-based state, Angular control-flow syntax (`@if`, `@for`)
@@ -35,6 +35,7 @@ Interactive examples with all calendar types, time picker, date restrictions and
 | `@angular/common` | 17.0.0 |
 | `@angular/forms` | 17.0.0 |
 | `jalali-moment` | 3.0.0 |
+| `moment-hijri` | 3.0.0 *(required for Hijri calendar)* |
 
 > Angular 17 introduced signal inputs, `input<>()`, `computed()`, `effect()`, and the `@if`/`@for` control-flow syntax that this library depends on.
 
@@ -44,6 +45,8 @@ Interactive examples with all calendar types, time picker, date restrictions and
 
 ```bash
 npm install ng-cyrus-calendar jalali-moment
+# For Hijri calendar support, also install:
+npm install moment-hijri
 ```
 
 ---
@@ -191,11 +194,14 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 
 ## Calendar System Notes
 
-| System | Typical year | Layout | Week start |
-|---|---|---|---|
-| Gregorian | 2025 | LTR | Monday |
-| Shamsi (Jalali) | 1403 | RTL | Saturday |
-| Imperial | 2584 | RTL | Saturday |
+| System | Typical year | Layout | Week start | Weekends |
+|---|---|---|---|---|
+| Gregorian | 2025 | LTR | Monday | Sat + Sun |
+| Shamsi (Jalali) | 1403 | RTL | Saturday | Friday |
+| Imperial | 2584 | RTL | Saturday | Friday |
+| Hijri (Islamic) | 1446 | RTL | Sunday | Fri + Sat |
+
+> ⚠️ `moment-hijri` is required for the Hijri calendar. Install it with `npm install moment-hijri`.
 
 ---
 
@@ -306,6 +312,20 @@ npm install bootstrap
 </calendar-popup>
 ```
 
+### Hijri (Islamic)
+
+```html
+<input type="text" #myInput [(ngModel)]="selectedDate" />
+<calendar-popup
+  calendar-type="hijri"
+  [(ngModel)]="selectedDate"
+  [input]="myInput"
+  [disable-weekends]="true">
+</calendar-popup>
+```
+
+> The emitted value is always Gregorian (e.g. `2026-04-12`). A Hijri date `1447/10/14` emits the equivalent Gregorian ISO string.
+
 ### With time picker
 
 ```html
@@ -326,7 +346,7 @@ npm install bootstrap
 
 | Input | Type | Default | Description |
 |---|---|---|---|
-| `calendar-type` | `'gregorian'` \| `'shamsi'` \| `'imperial'` | `'shamsi'` | Calendar system to use |
+| `calendar-type` | `'gregorian'` \| `'shamsi'` \| `'imperial'` \| `'hijri'` | `'shamsi'` | Calendar system to use |
 | `input` | `HTMLInputElement` | — | The text input to attach to |
 | `format` | `string` | `'yyyy/MM/dd'` | Date format string |
 | `date` | `boolean` | `true` | Show the date picker |

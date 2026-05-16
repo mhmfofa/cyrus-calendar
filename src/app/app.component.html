@@ -65,6 +65,16 @@
                   (change)="setCalendarType(datePickerType.Gregorian)"
                 />
                 <label class="btn btn-outline-primary" for="calendarGregorian">میلادی</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="calendarType"
+                  id="calendarHijri"
+                  [checked]="selectedCalendarType() === datePickerType.Hijri"
+                  (change)="setCalendarType(datePickerType.Hijri)"
+                />
+                <label class="btn btn-outline-primary" for="calendarHijri">هجری قمری</label>
               </div>
             </fieldset>
 
@@ -79,7 +89,7 @@
                 formControlName="dateInput"
                 cyrus-calendar
                 [calendar-type]="selectedCalendarType()"
-                [disable-past-days]="true"
+                [disable-past-days]="false"
                 (focus)="calendarPopup.open()"
                 (click)="calendarPopup.open()"
                 (input)="calendarPopup.writeValue(dateInput.value)"

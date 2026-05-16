@@ -4,7 +4,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { CyrusCalendarConfigService } from '../cyrus-calendar-config.service';
 import { CyrusCalendarDirective } from '../cyrus-calendar.directive';
-import { DateTime } from '../date-time';
+import { DateTime, HDate } from '../date-time';
 import { DatePickerOptions, DatePickerType } from '../models';
 
 @Component({
@@ -144,7 +144,12 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
     } else if (calType === DatePickerType.Shamsi) {
       const raw = DateTime.parseJDate(item.format(fmt), fmt).toDate();
       return new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
+    } else if (calType === DatePickerType.Hijri) {
+      // HDate.toDate() uses moment-hijri for accurate Hijri → Gregorian conversion
+      const raw = (item as HDate).toDate();
+      return new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
     } else {
+      // Imperial: subtract 1180 years to get Shamsi, then convert to Gregorian
       const raw = DateTime.convertADateToJDate(item.format(fmt), fmt).toDate();
       return new Date(raw.getFullYear(), raw.getMonth(), raw.getDate(), 12, 0, 0);
     }
@@ -154,6 +159,7 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
   private gregorianDateToItem(gDate: Date, calType: DatePickerType): DateTime {
     if (calType === DatePickerType.Gregorian) return DateTime.toDateTime(gDate);
     if (calType === DatePickerType.Shamsi)   return DateTime.toJDate(gDate);
+    if (calType === DatePickerType.Hijri)    return DateTime.toHDate(gDate);
     return DateTime.toADate(gDate);
   }
 
@@ -291,9 +297,23 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
 
     const days: number[] = [];
     for (let i = 0; i < start; i++) days.push(null);
+
     const month = this.item.getMonth();
-    const isLeapYear = this.item.isLeapYear(this.effectiveCalendarType());
-    const count = this.monthDaysCount[month] + (isLeapYear && ((options.type !== DatePickerType.Gregorian && month == 12) || (options.type == DatePickerType.Gregorian && month == 2)) ? 1 : 0);
+    let count: number;
+
+    if (options.globalization.getDaysInMonth) {
+      // Preferred path: exact month length (e.g. Hijri via moment-hijri)
+      count = options.globalization.getDaysInMonth(this.item.getYear(), month);
+    } else {
+      const isLeapYear = this.item.isLeapYear(this.effectiveCalendarType());
+      count = this.monthDaysCount[month] + (
+        isLeapYear && (
+          (options.type !== DatePickerType.Gregorian && month === 12) ||
+          (options.type === DatePickerType.Gregorian && month === 2)
+        ) ? 1 : 0
+      );
+    }
+
     for (let i = 1; i <= count; i++) days.push(i);
     return days;
   }
@@ -425,12 +445,18 @@ export class CalendarPopupComponent implements OnInit, ControlValueAccessor {
     return flag;
   }
 
-  isWeekend(index) {
-    // Persian: Saturday is the last day of week (index 6)
-    // Gregorian Monday-first: Sat=5, Sun=6
-    return this.effectiveCalendarType() !== DatePickerType.Gregorian
-      ? (index - 6) % 7 == 0
-      : index % 7 == 5 || index % 7 == 6;
+  isWeekend(index: number): boolean {
+    const type = this.effectiveCalendarType();
+    if (type === DatePickerType.Gregorian) {
+      // Mon-first grid: col 5 = Saturday, col 6 = Sunday
+      return index % 7 === 5 || index % 7 === 6;
+    } else if (type === DatePickerType.Hijri) {
+      // Sun-first grid: col 5 = Friday, col 6 = Saturday
+      return index % 7 === 5 || index % 7 === 6;
+    } else {
+      // Shamsi / Imperial — Sat-first grid: col 6 = Friday
+      return (index - 6) % 7 === 0;
+    }
   }
 
   isToday(day: number, month: number, year: number){

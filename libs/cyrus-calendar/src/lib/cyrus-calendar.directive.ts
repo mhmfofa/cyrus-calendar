@@ -22,8 +22,15 @@ export class CyrusCalendarDirective {
         this.renderer.setAttribute(this.el.nativeElement, 'placeholder', custom);
         return;
       }
-      const isRtl = this.calendarType() !== DatePickerType.Gregorian;
-      const defaultText = isRtl ? '\u0627\u0646\u062a\u062e\u0627\u0628 \u062a\u0627\u0631\u06cc\u062e' : 'Select a date';
+      const type = this.calendarType();
+      let defaultText: string;
+      if (type === DatePickerType.Gregorian) {
+        defaultText = 'Select a date';
+      } else if (type === DatePickerType.Hijri) {
+        defaultText = '\u0627\u062e\u062a\u0631 \u062a\u0627\u0631\u064a\u062e\u0627\u064b'; // اختر تاريخاً
+      } else {
+        defaultText = '\u0627\u0646\u062a\u062e\u0627\u0628 \u062a\u0627\u0631\u06cc\u062e'; // انتخاب تاریخ
+      }
       this.renderer.setAttribute(this.el.nativeElement, 'placeholder', defaultText);
     });
   }

@@ -1,7 +1,7 @@
 {
   "name": "ng-cyrus-calendar",
-  "version": "1.0.4",
-  "description": "A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali) and Imperial calendars with RTL/LTR support.",
+  "version": "1.1.0",
+  "description": "A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali), Imperial and Hijri (Islamic) calendars with RTL/LTR support.",
   "keywords": [
     "angular",
     "datepicker",
@@ -28,6 +28,11 @@
     "@angular/common": ">=17.0.0",
     "@angular/core": ">=17.0.0",
     "@angular/forms": ">=17.0.0",
-    "jalali-moment": "^3.3.11"
+    "jalaali-js": ">=2.0.0",
+    "moment-hijri": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jalaali-js": { "optional": true },
+    "moment-hijri": { "optional": true }
   }
 }

@@ -1,4 +1,5 @@
-import * as moment from 'jalali-moment'
+import * as jalaali from 'jalaali-js'
+import * as momentHijri from 'moment-hijri'
 
 export class DateTime {
   protected year: number;
@@ -46,7 +47,8 @@ export class DateTime {
   public isLeapYear(calendarType: string): boolean { 
     let year = this.getYear();
     if (calendarType == 'imperial') year -= 1180;
-    return calendarType == 'gregorian' ? ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) : moment.jIsLeapYear(year); 
+    if (year < 1) return false; // guard against uninitialized or invalid dates
+    return calendarType == 'gregorian' ? ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) : jalaali.isLeapJalaaliYear(year); 
   }
 
   public equalsDate(date: DateTime): boolean { return this.value.substr(0, 8) == date.value.substr(0, 8); }
@@ -170,53 +172,36 @@ export class DateTime {
     else return new DateTime(date.getYear(), date.getMonth(), date.getDay(), date.getHour(), date.getMinute(), date.getSecond());
   }
   public static toDate(date: DateTime): Date {
-    // console.log(date);
-    return new Date (moment.from(date.format("yyyy/MM/dd"), 'fa').format('YYYY-MM-DD'));
+    const y = date.getYear(), m = date.getMonth(), d = date.getDay();
+    if (y <= 0 || m <= 0 || d <= 0) return new Date(NaN);
+    return jalaali.jalaaliToDateObject(y, m, d);
   }
 
-  public static toJDate(date: Date| DateTime): JDate {
-    let year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-    var myDate = null;
+  public static toJDate(date: Date | DateTime): JDate {
+    let gDate: Date, hour = 0, minute = 0, second = 0;
     if (date instanceof Date) {
-      myDate = moment(date.toISOString().split('T')[0]).locale('fa');
-      hour = date.getHours();
-      minute = date.getMinutes();
-      second = date.getSeconds();
+      gDate = date;
+      hour = date.getHours(); minute = date.getMinutes(); second = date.getSeconds();
     } else {
-      myDate = moment(new Date(date.format("yyyy-MM-dd"))).locale('fa');
-      hour = date.getHour();
-      minute = date.getMinute();
-      second = date.getSecond();
+      gDate = new Date(date.getYear(), date.getMonth() - 1, date.getDay());
+      hour = date.getHour(); minute = date.getMinute(); second = date.getSecond();
     }
-    year = parseInt(myDate.format("YYYY"));
-    month = parseInt(myDate.format("MM"));
-    day = parseInt(myDate.format("DD"));
-
-    return new JDate(year, month, day, hour, minute, second);
+    const { jy, jm, jd } = jalaali.toJalaali(gDate);
+    return new JDate(jy, jm, jd, hour, minute, second);
   }
 
   public static toADate(date: Date | DateTime | string): ADate {
-    if(typeof date === "string") {
-      date = new Date(date);
-    }
-    let year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-    var myDate = null;
+    if (typeof date === 'string') date = new Date(date);
+    let gDate: Date, hour = 0, minute = 0, second = 0;
     if (date instanceof Date) {
-      myDate = moment(moment(new Date(date)).locale('fa').format('YYYY/MM/DD'));
-      hour = date.getHours();
-      minute = date.getMinutes();
-      second = date.getSeconds();
+      gDate = date;
+      hour = date.getHours(); minute = date.getMinutes(); second = date.getSeconds();
     } else {
-      myDate = moment(new Date(date.format("yyyy-MM-dd"))).locale('fa');
-      hour = date.getHour();
-      minute = date.getMinute();
-      second = date.getSecond();
+      gDate = new Date(date.getYear(), date.getMonth() - 1, date.getDay());
+      hour = date.getHour(); minute = date.getMinute(); second = date.getSecond();
     }
-    year = parseInt(myDate.format("YYYY")) + 1180;
-    month = parseInt(myDate.format("MM"));
-    day = parseInt(myDate.format("DD"));
-
-    return new ADate(year, month, day, hour, minute, second);
+    const { jy, jm, jd } = jalaali.toJalaali(gDate);
+    return new ADate(jy + 1180, jm, jd, hour, minute, second);
   }
 
   public static parseJDate(value: string, format: string = 'yyyy/MM/dd hh:mm:ss'): JDate {
@@ -253,6 +238,26 @@ export class DateTime {
   }
 
   
+
+  public static toHDate(date: Date | DateTime): HDate {
+    const gDate: Date = date instanceof Date
+      ? date
+      : new Date(date.getYear(), date.getMonth() - 1, date.getDay(), 12, 0, 0);
+
+    const m = (momentHijri as any)(gDate);
+    const year   = m.iYear();
+    const month  = m.iMonth() + 1; // moment-hijri is 0-indexed
+    const day    = m.iDate();
+    const hour   = date instanceof Date ? date.getHours()   : date.getHour();
+    const minute = date instanceof Date ? date.getMinutes() : date.getMinute();
+    const second = date instanceof Date ? date.getSeconds() : date.getSecond();
+    return new HDate(year, month, day, hour, minute, second);
+  }
+
+  public static parseHDate(value: string, format: string = 'yyyy/MM/dd hh:mm:ss'): HDate {
+    const d = this.parse(value, format);
+    return new HDate(d.getYear(), d.getMonth(), d.getDay(), d.getHour(), d.getMinute(), d.getSecond());
+  }
 
   public static get now(): DateTime { return DateTime.toDateTime(new Date()); }
 }
@@ -350,4 +355,78 @@ export class ADate extends DateTime {
   public toDateTimeString(): string { return `${this.year}/${this.month}/${this.day} ${this.hour}:${this.minute}:${this.second}`; }
 
   public static get now(): ADate { return DateTime.toADate(new Date()); }
+}
+
+/**
+ * HDate — Islamic Hijri (Lunar) calendar date.
+ * Uses moment-hijri (Umm al-Qura) for all conversions and calculations.
+ * Emitted values are always Gregorian (yyyy-MM-dd); HDate is only used for display.
+ */
+export class HDate extends DateTime {
+  public constructor(
+    year: number = -1, month: number = -1, day: number = -1,
+    hour: number = -1, minute: number = -1, second: number = -1
+  ) { super(year, month, day, hour, minute, second, 'hijri'); }
+
+  /** Convert this Hijri date to a native JS Gregorian Date. */
+  public toDate(): Date {
+    const m = (momentHijri as any)(
+      `${this.year}/${String(this.month).padStart(2, '0')}/${String(this.day).padStart(2, '0')}`,
+      'iYYYY/iMM/iDD'
+    );
+    return m.toDate();
+  }
+
+  /** Returns the number of days in this Hijri month (accurate via moment-hijri). */
+  public getDaysInMonth(): number {
+    const mm = String(this.month).padStart(2, '0');
+    const m = (momentHijri as any)(`${this.year}/${mm}/01`, 'iYYYY/iMM/iDD');
+    return m.daysInMonth();
+  }
+
+  /**
+   * Returns the day-of-week (0 = Sunday) on which day 1 of this Hijri month falls.
+   * Hijri week starts Sunday, so this value equals the number of leading empty grid cells.
+   */
+  public getStartDayOfMonth(): number {
+    const mm = String(this.month).padStart(2, '0');
+    const m = (momentHijri as any)(`${this.year}/${mm}/01`, 'iYYYY/iMM/iDD');
+    return m.day(); // 0 = Sunday … 6 = Saturday
+  }
+
+  /**
+   * Returns the column index (Sunday-first) for this day inside the calendar grid.
+   * Used by isWeekend / isDisabled logic.
+   */
+  public getDayOfWeek(): number {
+    const startDay = this.getStartDayOfMonth();
+    return (startDay + this.day - 1) % 7;
+  }
+
+  /**
+   * Returns true if this Hijri year is a leap year
+   * (month 12 has 30 days instead of 29).
+   */
+  public isLeapYear(_calendarType: string): boolean {
+    const m = (momentHijri as any)(`${this.year}/12/01`, 'iYYYY/iMM/iDD');
+    return m.daysInMonth() === 30;
+  }
+
+  /** Add days by converting to Gregorian and back — handles variable month lengths correctly. */
+  public addDays(value: number): HDate {
+    const gDate = this.toDate();
+    gDate.setDate(gDate.getDate() + value);
+    const result = DateTime.toHDate(gDate);
+    result.setHour(this.hour).setMinute(this.minute).setSecond(this.second);
+    return result;
+  }
+
+  public clone(): HDate {
+    return new HDate(this.year, this.month, this.day, this.hour, this.minute, this.second);
+  }
+
+  public toDateString(): string { return `${this.year}/${this.month}/${this.day}`; }
+  public toDateTimeString(): string { return `${this.year}/${this.month}/${this.day} ${this.hour}:${this.minute}:${this.second}`; }
+
+  public static get now(): HDate { return DateTime.toHDate(new Date()); }
 }
