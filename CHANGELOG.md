@@ -6,6 +6,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.1.2] — 2026-05-16
+
+### Fixed
+- Published package now correctly includes only `tslib` as a hard dependency (no Angular app deps, no `bootstrap`, no `jalali-moment`)
+- `README.md` updated: removed `jalali-moment` references, added `jalaali-js` peer dep, fixed duplicate content
+- `CHANGELOG.md` now included in the published npm package
+
+---
+
+## [1.1.1] — 2026-05-16
+
+### Fixed
+- Root workspace `package.json` marked `private: true` to prevent accidental publish from workspace root
+- `jalaali-js` version aligned to `^2.0.0` across workspace and library
+
+---
+
 ## [1.1.0] — 2026-05-16
 
 ### ⚠️ Breaking Changes

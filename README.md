@@ -29,13 +29,13 @@ Interactive examples with all calendar types, time picker, date restrictions and
 
 ## Requirements
 
-| Peer dependency | Minimum |
-|---|---|
-| `@angular/core` | **17.0.0** |
-| `@angular/common` | 17.0.0 |
-| `@angular/forms` | 17.0.0 |
-| `jalali-moment` | 3.0.0 |
-| `moment-hijri` | 3.0.0 *(required for Hijri calendar)* |
+| Peer dependency | Minimum | Notes |
+|---|---|---|
+| `@angular/core` | **17.0.0** | |
+| `@angular/common` | 17.0.0 | |
+| `@angular/forms` | 17.0.0 | |
+| `jalaali-js` | 2.0.0 | Required for Shamsi & Imperial calendars |
+| `moment-hijri` | 3.0.0 | Required for Hijri calendar only |
 
 > Angular 17 introduced signal inputs, `input<>()`, `computed()`, `effect()`, and the `@if`/`@for` control-flow syntax that this library depends on.
 
@@ -44,7 +44,7 @@ Interactive examples with all calendar types, time picker, date restrictions and
 ## Installation
 
 ```bash
-npm install ng-cyrus-calendar jalali-moment
+npm install ng-cyrus-calendar jalaali-js
 # For Hijri calendar support, also install:
 npm install moment-hijri
 ```
@@ -52,22 +52,6 @@ npm install moment-hijri
 ---
 
 ## Setup
-
-### NgModule-based app
-
-```typescript
-import { CalendarPopupComponent, CyrusCalendarDirective } from 'ng-cyrus-calendar';
-
-@NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,          // or ReactiveFormsModule
-    CalendarPopupComponent,
-    CyrusCalendarDirective,
-  ]
-})
-export class AppModule {}
-```
 
 ### Standalone component
 
@@ -81,6 +65,17 @@ import { CalendarPopupComponent, CyrusCalendarDirective } from 'ng-cyrus-calenda
 export class MyComponent {}
 ```
 
+### NgModule-based app
+
+```typescript
+import { CalendarPopupComponent, CyrusCalendarDirective } from 'ng-cyrus-calendar';
+
+@NgModule({
+  imports: [CommonModule, FormsModule, CalendarPopupComponent, CyrusCalendarDirective]
+})
+export class AppModule {}
+```
+
 ---
 
 ## Usage
@@ -91,27 +86,41 @@ Export the directive as a template reference (`#cal="cyrusCalendar"`) and pass i
 ### Shamsi (Jalali / Persian)
 
 ```html
-<input
-  type="text"
-  #myInput
-  #cal="cyrusCalendar"
-  cyrus-calendar
-  [calendar-type]="'shamsi'"
-  autocomplete="off"
-  inputmode="none"
-/>
-<calendar-popup
-  [input]="myInput"
-  [directive]="cal"
-  [(ngModel)]="selectedDate">
+<input type="text" #myInput #cal="cyrusCalendar"
+  cyrus-calendar [calendar-type]="'shamsi'"
+  autocomplete="off" inputmode="none" />
+<calendar-popup [input]="myInput" [directive]="cal" [(ngModel)]="selectedDate">
 </calendar-popup>
 ```
 
 ### Gregorian
 
 ```html
-<input type="text" #myInput #cal="cyrusCalendar" cyrus-calendar
-  [calendar-type]="'gregorian'" autocomplete="off" inputmode="none" />
+<input type="text" #myInput #cal="cyrusCalendar"
+  cyrus-calendar [calendar-type]="'gregorian'"
+  autocomplete="off" inputmode="none" />
+<calendar-popup [input]="myInput" [directive]="cal" [(ngModel)]="selectedDate">
+</calendar-popup>
+```
+
+### Imperial
+
+```html
+<input type="text" #myInput #cal="cyrusCalendar"
+  cyrus-calendar [calendar-type]="'imperial'"
+  autocomplete="off" inputmode="none" />
+<calendar-popup [input]="myInput" [directive]="cal" [(ngModel)]="selectedDate">
+</calendar-popup>
+```
+
+### Hijri (Islamic)
+
+> Requires `moment-hijri` to be installed.
+
+```html
+<input type="text" #myInput #cal="cyrusCalendar"
+  cyrus-calendar [calendar-type]="'hijri'"
+  autocomplete="off" inputmode="none" />
 <calendar-popup [input]="myInput" [directive]="cal" [(ngModel)]="selectedDate">
 </calendar-popup>
 ```
@@ -125,17 +134,25 @@ Export the directive as a template reference (`#cal="cyrusCalendar"`) and pass i
   [time]="true"
   [(ngModel)]="selectedDateTime">
 </calendar-popup>
-
 <!-- Value emitted : 1403-06-15T14:30:00  -->
 <!-- Input displays: 1403/06/15 - 14:30:00 -->
 ```
 
-### Disable restrictions
+### Calendar switcher (value preserved on type change)
+
+```typescript
+calendarType = signal<DatePickerType>(DatePickerType.Imperial);
+```
 
 ```html
-<input cyrus-calendar [calendar-type]="'shamsi'"
-  [disable-past-days]="true" [disable-weekends]="true" ... />
+<input type="text" #myInput #cal="cyrusCalendar"
+  cyrus-calendar [calendar-type]="calendarType()"
+  autocomplete="off" inputmode="none" />
+<calendar-popup [input]="myInput" [directive]="cal" [(ngModel)]="value">
+</calendar-popup>
 ```
+
+> ⚠️ **The emitted value is always in the Gregorian calendar**, regardless of the calendar type displayed. A Shamsi date `1404/12/17` and an Imperial date `2584/12/17` both emit `2026-03-08`. This makes the value safe to send directly to REST APIs and databases without any conversion.
 
 ---
 
@@ -159,12 +176,12 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 | Input | Type | Default | Description |
 |---|---|---|---|
 | `[input]` | `HTMLInputElement` | **required** | Template reference of the attached input |
-| `[directive]` | `CyrusCalendarDirective` | `null` | Directive reference — inherits `calendar-type`, `disable-weekends`, `disable-past-days` |
+| `[directive]` | `CyrusCalendarDirective` | `null` | Directive reference — inherits `calendar-type` and disable rules |
 | `[calendar-type]` | `DatePickerType` | `'shamsi'` | Calendar system (ignored when `[directive]` provided) |
-| `[format]` | `string` | `'yyyy/MM/dd'` | Display format shown in the input (slashes) |
-| `[value-format]` | `string` | `'yyyy-MM-dd'` | Structure of the emitted Gregorian date string (e.g. `yyyy-MM-dd`). Only affects separator/order — the date is **always Gregorian** regardless of the displayed calendar. |
+| `[format]` | `string` | `'yyyy/MM/dd'` | Display format shown in the input |
+| `[value-format]` | `string` | `'yyyy-MM-dd'` | Format of the emitted Gregorian date string |
 | `[time]` | `boolean` | `false` | Show time picker panel |
-| `[time-format]` | `string` | `'hh:mm:ss'` | Format for the time part (only when `[time]="true"`) |
+| `[time-format]` | `string` | `'hh:mm:ss'` | Format for the time part |
 | `[date]` | `boolean` | `true` | Show date picker panel |
 | `[min]` | `string` | `null` | Minimum selectable date |
 | `[max]` | `string` | `null` | Maximum selectable date |
@@ -175,7 +192,7 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 | `[range]` | `boolean` | `false` | Date-range selection |
 | `[options]` | `DatePickerOptions` | — | Advanced configuration object |
 
-> ⚠️ **The emitted value is always in the Gregorian calendar**, regardless of the calendar type displayed to the user. A Shamsi date `1404/12/17` and an Imperial date `2584/12/17` both emit `2026-03-08`. This makes the value safe to send directly to REST APIs and databases without any conversion on your side.
+> ⚠️ **The emitted value is always in the Gregorian calendar**, regardless of the calendar type displayed. A Shamsi date `1404/12/17` and an Imperial date `2584/12/17` both emit `2026-03-08`.
 
 ---
 
@@ -201,7 +218,75 @@ Implements `ControlValueAccessor` — works with `ngModel` and reactive forms.
 | Imperial | 2584 | RTL | Saturday | Friday |
 | Hijri (Islamic) | 1446 | RTL | Sunday | Fri + Sat |
 
-> ⚠️ `moment-hijri` is required for the Hijri calendar. Install it with `npm install moment-hijri`.
+---
+
+## Development
+
+```bash
+git clone https://github.com/mhmfofa/cyrus-calendar.git
+cd cyrus-calendar
+npm install
+npm start          # dev server → http://localhost:4200
+npm run build:lib  # build the distributable library → dist/cyrus-calendar/
+```
+
+---
+
+## Publishing to npm
+
+```bash
+# 1. Build the library
+npm run build:lib
+
+# 2. Publish from the dist folder (NOT the root)
+cd dist/cyrus-calendar
+npm publish --access public
+```
+
+See [NPM-PUBLISH.md](./NPM-PUBLISH.md) for the full publishing guide.
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for the full version history.
+
+---
+
+## License
+
+MIT © [mhmfofa](https://github.com/mhmfofa)
+
+| `[disable-past-days]` | `boolean` | `false` | Disable past dates |
+| `[from-tomorow]` | `boolean` | `false` | Only allow tomorrow onwards |
+| `[disable-weekends]` | `boolean` | `false` | Disable weekend days |
+| `[multiple]` | `boolean` | `false` | Multi-date selection |
+| `[range]` | `boolean` | `false` | Date-range selection |
+| `[options]` | `DatePickerOptions` | — | Advanced configuration object |
+
+---
+
+## Format Tokens
+
+| Token | Meaning | Example |
+|---|---|---|
+| `yyyy` | 4-digit year | `1403`, `2025` |
+| `MM` | 2-digit month (zero-padded) | `07` |
+| `dd` | 2-digit day (zero-padded) | `05` |
+| `hh` | Hour 0–23 (zero-padded) | `14` |
+| `mm` | Minute (zero-padded) | `30` |
+| `ss` | Second (zero-padded) | `00` |
+
+---
+
+## Calendar System Notes
+
+| System | Typical year | Layout | Week start | Weekends |
+|---|---|---|---|---|
+| Gregorian | 2025 | LTR | Monday | Sat + Sun |
+| Shamsi (Jalali) | 1403 | RTL | Saturday | Friday |
+| Imperial | 2584 | RTL | Saturday | Friday |
+| Hijri (Islamic) | 1446 | RTL | Sunday | Fri + Sat |
 
 ---
 
@@ -212,7 +297,6 @@ git clone https://github.com/mhmfofa/cyrus-calendar.git
 cd cyrus-calendar
 npm install
 npm start          # dev server → http://localhost:4200
-npm run build      # production build
 npm run build:lib  # build the distributable library → dist/cyrus-calendar/
 ```
 
@@ -221,206 +305,25 @@ npm run build:lib  # build the distributable library → dist/cyrus-calendar/
 ## Publishing to npm
 
 ```bash
-# 1. Build
+# 1. Build the library
 npm run build:lib
 
-# 2. Publish from the dist folder
+# 2. Publish from the dist folder (NOT the root)
 cd dist/cyrus-calendar
 npm publish --access public
 ```
 
----
-
-## License
-
-MIT © mhmfofa
-
+See [NPM-PUBLISH.md](./NPM-PUBLISH.md) for the full publishing guide.
 
 ---
 
-## Installation
+## Changelog
 
-```bash
-npm install ng-cyrus-calendar
-```
-
-> **Angular peer requirement:** `>=21.0.0`
-
----
-
-## Setup
-
-### 1. Import the module
-
-```typescript
-// app.module.ts
-import { DatepickerModule } from 'ng-cyrus-calendar';
-
-@NgModule({
-  imports: [DatepickerModule],
-})
-export class AppModule {}
-```
-
-### 2. Add Bootstrap 5 (optional but recommended)
-
-```bash
-npm install bootstrap
-```
-
-```scss
-// styles.scss
-@import 'bootstrap/dist/css/bootstrap.min.css';
-```
-
----
-
-## Usage
-
-### Basic (Gregorian)
-
-```html
-<input type="text" #myInput [(ngModel)]="selectedDate" />
-<calendar-popup
-  calendar-type="gregorian"
-  [(ngModel)]="selectedDate"
-  [input]="myInput">
-</calendar-popup>
-```
-
-### Shamsi (Jalali / Persian)
-
-```html
-<input type="text" #myInput [(ngModel)]="selectedDate" />
-<calendar-popup
-  calendar-type="shamsi"
-  [(ngModel)]="selectedDate"
-  [input]="myInput">
-</calendar-popup>
-```
-
-### Imperial
-
-```html
-<input type="text" #myInput [(ngModel)]="selectedDate" />
-<calendar-popup
-  calendar-type="imperial"
-  [(ngModel)]="selectedDate"
-  [input]="myInput"
-  [disable-weekends]="true"
-  [disable-past-days]="true">
-</calendar-popup>
-```
-
-### Hijri (Islamic)
-
-```html
-<input type="text" #myInput [(ngModel)]="selectedDate" />
-<calendar-popup
-  calendar-type="hijri"
-  [(ngModel)]="selectedDate"
-  [input]="myInput"
-  [disable-weekends]="true">
-</calendar-popup>
-```
-
-> The emitted value is always Gregorian (e.g. `2026-04-12`). A Hijri date `1447/10/14` emits the equivalent Gregorian ISO string.
-
-### With time picker
-
-```html
-<calendar-popup
-  calendar-type="gregorian"
-  [(ngModel)]="selectedDateTime"
-  [input]="myInput"
-  [date]="true"
-  [time]="true">
-</calendar-popup>
-```
-
----
-
-## API Reference
-
-### `<calendar-popup>` inputs
-
-| Input | Type | Default | Description |
-|---|---|---|---|
-| `calendar-type` | `'gregorian'` \| `'shamsi'` \| `'imperial'` \| `'hijri'` | `'shamsi'` | Calendar system to use |
-| `input` | `HTMLInputElement` | — | The text input to attach to |
-| `format` | `string` | `'yyyy/MM/dd'` | Date format string |
-| `date` | `boolean` | `true` | Show the date picker |
-| `time` | `boolean` | `false` | Show the time picker |
-| `min` | `string` | — | Minimum selectable date (same format) |
-| `max` | `string` | — | Maximum selectable date (same format) |
-| `disable-past-days` | `boolean` | `false` | Disables all past dates |
-| `from-tomorow` | `boolean` | `false` | Disables today and past dates |
-| `disable-weekends` | `boolean` | `false` | Disables weekend days |
-| `disables` | `(number\|string)[]` | — | Array of day-of-week indexes or date strings to disable |
-| `multiple` | `boolean` | `false` | Allow multi-date selection |
-| `range` | `boolean` | `false` | Allow date-range selection |
-| `options` | `DatePickerOptions` | auto | Override globalization options |
-
----
-
-## Format Tokens
-
-| Token | Meaning | Example |
-|---|---|---|
-| `yyyy` | 4-digit year | `1403` |
-| `MM` | 2-digit month | `07` |
-| `dd` | 2-digit day | `05` |
-| `hh` | 2-digit hour (24 h) | `14` |
-| `mm` | 2-digit minute | `30` |
-| `ss` | 2-digit second | `00` |
-
----
-
-## Year-Grid Picker
-
-Clicking the **year label** in the header opens a 12-year grid overlay.
-Use **›** / **‹** to navigate decades. Click any year to select it instantly.
-
----
-
-## Development
-
-```bash
-# Clone
-git clone https://github.com/mhm/ng-cyrus-calendar.git
-cd ng-cyrus-calendar
-
-# Install dependencies
-npm install
-
-# Start dev server  →  http://localhost:4200
-npm start
-
-# Production build
-npm run build
-```
-
----
-
-## Publishing to npm
-
-```bash
-# Builds first (via prepublishOnly script), then publishes
-npm publish
-```
-
----
-
-## Calendar System Notes
-
-| System | Year offset | Leap year rule |
-|---|---|---|
-| Gregorian | — | Standard Gregorian leap year |
-| Shamsi (Jalali) | −621 from Gregorian | Iranian solar leap year algorithm |
-| Imperial | +1180 from Shamsi | Same as Shamsi |
+See [CHANGELOG.md](./CHANGELOG.md) for the full version history.
 
 ---
 
 ## License
 
-MIT © mhm
+MIT © [mhmfofa](https://github.com/mhmfofa)
+

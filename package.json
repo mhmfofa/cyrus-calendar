@@ -9,7 +9,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:lib": "ng-packagr -p libs/cyrus-calendar/ng-package.json && node -e \"require('fs').copyFileSync('README.md','dist/cyrus-calendar/README.md')\"",
+    "build:lib": "ng-packagr -p libs/cyrus-calendar/ng-package.json && node -e \"require('fs').copyFileSync('README.md','dist/cyrus-calendar/README.md');require('fs').copyFileSync('CHANGELOG.md','dist/cyrus-calendar/CHANGELOG.md')\"",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

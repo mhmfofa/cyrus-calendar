@@ -1,6 +1,6 @@
 {
   "name": "ng-cyrus-calendar",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A multi-calendar Angular date picker supporting Gregorian, Shamsi (Jalali), Imperial and Hijri (Islamic) calendars with RTL/LTR support.",
   "keywords": [
     "angular",
