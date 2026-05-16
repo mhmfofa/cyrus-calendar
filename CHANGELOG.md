@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [1.1.2] — 2026-05-16
+## [1.1.3] — 2026-05-16
 
 ### Fixed
 - Published package now correctly includes only `tslib` as a hard dependency (no Angular app deps, no `bootstrap`, no `jalali-moment`)
